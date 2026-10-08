@@ -3,7 +3,7 @@ title: Postgres
 description: Base backups and WAL into two sets, restored to any moment in between.
 ---
 
-`goback postgres` takes base backups and ships WAL into two sets, and restores a cluster to any moment in between. The example runs it with Docker Compose; the files are in [contrib/postgres](https://github.com/twcclan/goback/tree/master/contrib/postgres).
+`goback postgres` takes base backups and ships WAL into two sets, and restores a cluster to any moment in between. The example runs it with Docker Compose; the files are in [contrib/postgres](https://github.com/gobackio/goback/tree/master/contrib/postgres).
 
 `compose.yaml` backs up a Postgres container into a GCS bucket:
 

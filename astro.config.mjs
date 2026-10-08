@@ -7,7 +7,7 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: 'goback',
-			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/twcclan/goback' }],
+			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/gobackio/goback' }],
 			customCss: ['./src/styles/theme.css'],
 			sidebar: [
 				{

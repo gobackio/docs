@@ -6,7 +6,7 @@ description: Install goback, make a store key, take a first backup and list it.
 ## Install
 
 ```sh
-go install github.com/twcclan/goback/cmd/goback@latest
+go install github.com/gobackio/goback/cmd/goback@latest
 ```
 
 ## Make a store key
