@@ -1,9 +1,9 @@
 ---
-title: The database is only an index
-description: Everything a restore needs lives in the store. Losing any database never loses a backup.
+title: The index is rebuildable
+description: Keys and restore data are stored in the bucket; the index is rebuilt from it.
 ---
 
-goback keeps an SQLite or Postgres index next to the store so that listing commits, finding files and planning backups is fast. It is never the only copy of anything.
+goback keeps an SQLite or Postgres index next to the store so that listing commits, finding files and planning backups is fast. Everything in it can be rebuilt from the store.
 
 | Lives in the store | Rebuilt from the store |
 | --- | --- |
@@ -21,7 +21,3 @@ goback --storage gcs://my-bucket --index /var/lib/goback/index fix
 ```
 
 `fix` reads the archives and set heads and writes a fresh index. Commits that name no set go to a placeholder set.
-
-## What this rules out
-
-Nothing goback needs for a restore may exist only in a database: not keys, not set membership, not which commits are deleted. A change that would need one is a bug.

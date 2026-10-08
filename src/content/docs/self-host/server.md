@@ -17,7 +17,7 @@ export GOBACK_STORAGE=goback://<secret>@backup.example.com:6060
 goback --store-key store.key --agent-id laptop --set home commit new ~/
 ```
 
-Every agent presents the shared secret and its own `--agent-id` (the hostname by default). Store keys stay on the agents; the server never sees names or contents.
+Every agent presents the shared secret and its own `--agent-id` (the hostname by default). Store keys stay on the agents; names and contents reach the server encrypted.
 
 | Flag | Does |
 | --- | --- |

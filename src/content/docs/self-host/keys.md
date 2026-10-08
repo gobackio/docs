@@ -5,7 +5,7 @@ description: The store key that encrypts on the agent, escrow under a passphrase
 
 | Key | Encrypts | Where |
 | --- | --- | --- |
-| **store key** | names and contents, before they leave the agent | the agent; a server never sees it |
+| **store key** | names and contents, before they leave the agent | stays on the agent |
 | **at-rest key** | archives, where a local, `gcs://` or `s3://` store keeps them | the store's host |
 
 The two are independent.
