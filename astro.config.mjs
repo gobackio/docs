@@ -20,7 +20,7 @@ export default defineConfig({
 				},
 				{
 					label: 'Concepts',
-					items: ['concepts/data-model', 'concepts/index-only'],
+					items: ['concepts/data-model', 'concepts/self-contained'],
 				},
 				{
 					label: 'CLI reference',

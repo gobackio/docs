@@ -1,9 +1,9 @@
 ---
-title: The index is rebuildable
-description: Keys and restore data are stored in the bucket; the index is rebuilt from it.
+title: Self-contained backups
+description: Everything a restore needs is in the bucket.
 ---
 
-goback keeps an SQLite or Postgres index next to the store so that listing commits, finding files and planning backups is fast. Everything in it can be rebuilt from the store.
+A store holds everything a restore needs: the data, its metadata and escrowed keys. The SQLite or Postgres index next to it only makes listing and planning fast; it is rebuilt from the store when it is missing.
 
 | Lives in the store | Rebuilt from the store |
 | --- | --- |
