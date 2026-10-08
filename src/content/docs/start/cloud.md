@@ -1,6 +1,6 @@
 ---
 title: Quick start, goback cloud
-description: Sign up, issue an agent key, and back up a machine to store.goback.io.
+description: Create an organisation, issue an agent key, back up to store.goback.io.
 ---
 
 ## Sign up

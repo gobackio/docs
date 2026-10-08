@@ -1,6 +1,6 @@
 ---
 title: Quick start, self-hosted
-description: Install goback, make a store key, take a first backup and list it.
+description: Install, make a key, back up a directory to your own bucket.
 ---
 
 ## Install
