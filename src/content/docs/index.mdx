@@ -1,0 +1,31 @@
+---
+title: goback
+description: Deduplicating, encrypted backups. Self-host the open source core, or use goback cloud.
+template: splash
+hero:
+  tagline: Back up everything. Store each piece once.
+  actions:
+    - text: Self-host
+      link: /start/self-host/
+      icon: right-arrow
+    - text: goback cloud
+      link: /start/cloud/
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid>
+	<Card title="Open source" icon="laptop">
+		One user, one store, on storage you own: a directory, Google Cloud Storage or anything S3-compatible.
+	</Card>
+	<Card title="goback cloud" icon="rocket">
+		Your organisation's agents back up to store.goback.io, with members, keys, alerts and a console.
+	</Card>
+	<Card title="Restore first" icon="random">
+		A whole snapshot, one file, or any age. [Restore](/start/restore/)
+	</Card>
+	<Card title="The bucket is the truth" icon="approve-check">
+		Every database is only an index. [Why](/concepts/index-only/)
+	</Card>
+</CardGrid>
