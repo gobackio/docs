@@ -86,7 +86,7 @@ An owner can hand the org's store key to goback so listings show real names to e
 
 - The copy is stored in the bucket, not at-rest sealed.
 - Self-hosted: every holder of the server secret can fetch it.
-- goback cloud: API keys with `write` or `read` can fetch it, since agents run with `--passphrase` need it to back up; console members fetch it to unlock.
+- goback cloud: API keys with `write` or `read` can fetch it, since agents run with `--passphrase` need it to back up; console members fetch it to unlock, and each fetch is recorded in Activity with who made it.
 - Anyone who has it can guess passphrases offline. goback's tools require at least 12 characters when they create one; copies made earlier are not rechecked.
 
 ### Console unlock
