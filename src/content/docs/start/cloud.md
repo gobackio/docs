@@ -22,7 +22,7 @@ On **Keys**, issue an agent key. It is shown once.
 ## Back up
 
 ```sh
-export GOBACK_STORAGE=goback://<agent key>@store.goback.io:6060
+export GOBACK_STORAGE=goback://<agent key>@store.goback.io
 export GOBACK_PASSPHRASE=<passphrase>
 goback --set home commit new ~/
 ```

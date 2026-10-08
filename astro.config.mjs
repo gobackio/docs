@@ -3,8 +3,7 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
 export default defineConfig({
-	site: 'https://docs.goback.io',
-	integrations: [
+	site: 'https://docs.goback.io',	integrations: [
 		starlight({
 			title: 'goback',
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/gobackio/goback' }],
