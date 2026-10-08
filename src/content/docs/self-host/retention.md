@@ -19,7 +19,7 @@ The last bracket may drop its count to keep forever. Without a name, `set retent
 | Stage | Reversible |
 | --- | --- |
 | deleted by hand: waits in the trash (`--trash-days`) | `commit undelete` |
-| let go by the policy: tombstoned at the next retirement | `commit unretire`, until collected |
+| expired by the policy: removed from the set at the next `maintain` run | `commit unretire`, until collected |
 | no live commit or pin reaches its objects: garbage collected | no |
 
 [`goback pin`](/reference/cli/goback-pin/) keeps a commit regardless of retention.
