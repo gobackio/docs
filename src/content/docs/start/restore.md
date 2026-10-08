@@ -27,7 +27,7 @@ goback --store-key store.key --set home file ls ~/projects 7d
 goback --store-key store.key --set home file restore ~/projects/notes.md ./notes.md 7d
 ```
 
-With goback cloud you can also browse a snapshot in the console and download a file; it is decrypted in your browser.
+With goback cloud you can also browse a snapshot in the console to find the path; names are decrypted in your browser.
 
 ## Download less
 

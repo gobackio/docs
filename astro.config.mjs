@@ -19,7 +19,7 @@ export default defineConfig({
 				},
 				{
 					label: 'Concepts',
-					items: ['concepts/self-contained'],
+					items: ['concepts/self-contained', 'concepts/security-model'],
 				},
 				{
 					label: 'CLI reference',
