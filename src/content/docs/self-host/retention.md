@@ -22,7 +22,7 @@ The last bracket may drop its count to keep forever. Without a name, `set retent
 | let go by the policy: tombstoned at the next retirement | `commit unretire`, until collected |
 | no live commit or pin reaches its objects: garbage collected | no |
 
-[`goback pin`](/reference/cli/pin/) keeps a commit regardless of retention.
+[`goback pin`](/reference/cli/goback-pin/) keeps a commit regardless of retention.
 
 ## Maintenance
 

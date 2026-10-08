@@ -39,4 +39,4 @@ With goback cloud you can also browse a snapshot in the console and download a f
 
 ## When the index is gone
 
-A new machine needs only the store and the key. Run [`goback fix`](/reference/cli/fix/) to rebuild the index from the store, then restore as above. See [The database is only an index](/concepts/index-only/).
+A new machine needs only the store and the key. Run [`goback fix`](/reference/cli/goback-fix/) to rebuild the index from the store, then restore as above. See [The database is only an index](/concepts/index-only/).

@@ -19,7 +19,7 @@ description: Where goback keeps objects, and the index that answers queries abou
 
 `--index` (or `GOBACK_INDEX`) is where a directory or bucket store keeps its index: a directory for SQLite, or a `postgres://` URL. Agents of a server need none; the server keeps it.
 
-The index can always be rebuilt from the store with [`goback fix`](/reference/cli/fix/). See [The database is only an index](/concepts/index-only/).
+The index can always be rebuilt from the store with [`goback fix`](/reference/cli/goback-fix/). See [The database is only an index](/concepts/index-only/).
 
 ## Cache
 

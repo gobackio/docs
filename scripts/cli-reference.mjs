@@ -58,7 +58,7 @@ const index = [
 	'',
 	'| Command | Does |',
 	'| --- | --- |',
-	...tree.commands.map((c) => `| [\`${c.name}\`](./${c.name}/) | ${cell(c.usage || c.description)} |`),
+	...tree.commands.map((c) => `| [\`${c.name}\`](./goback-${c.name}/) | ${cell(c.usage || c.description)} |`),
 	'',
 	'## Global flags',
 	'',
@@ -69,7 +69,7 @@ const index = [
 writeFileSync(join(out, 'index.md'), page('goback', tree.usage, 0, index));
 
 tree.commands.forEach((cmd, i) => {
-	writeFileSync(join(out, `${cmd.name}.md`), page(`goback ${cmd.name}`, cmd.usage || cmd.description, i + 1, section(['goback', cmd.name], cmd, 0)));
+	writeFileSync(join(out, `goback-${cmd.name}.md`), page(`goback ${cmd.name}`, cmd.usage || cmd.description, i + 1, section(['goback', cmd.name], cmd, 0)));
 });
 
 console.log(`wrote ${tree.commands.length + 1} pages to ${out}`);

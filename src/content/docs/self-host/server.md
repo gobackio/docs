@@ -26,4 +26,4 @@ Every agent presents the shared secret and its own `--agent-id` (the hostname by
 | `--plaintext-behind-proxy` | serve without TLS behind a proxy that terminates it |
 | `--retire-interval`, `--compact-interval`, `--gc-interval`, … | how often each maintenance step runs |
 
-All flags: [`goback server`](/reference/cli/server/).
+All flags: [`goback server`](/reference/cli/goback-server/).
