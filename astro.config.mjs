@@ -20,11 +20,22 @@ export default defineConfig({
 				},
 				{
 					label: 'Concepts',
-					items: ['concepts/data-model', 'concepts/self-contained'],
+					items: ['concepts/self-contained'],
 				},
 				{
 					label: 'CLI reference',
 					items: [{ autogenerate: { directory: 'reference/cli' } }],
+				},
+				{
+					label: 'Internals',
+					collapsed: true,
+					items: [
+						'internals/data-model',
+						'internals/store-layout',
+						'internals/lifecycle',
+						'internals/garbage-collection',
+						'internals/the-index',
+					],
 				},
 			],
 		}),

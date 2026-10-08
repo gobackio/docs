@@ -3,7 +3,7 @@ title: Self-contained backups
 description: Everything a restore needs is in the bucket.
 ---
 
-A store holds everything a restore needs: the data, its metadata and escrowed keys. The SQLite or Postgres index next to it only makes listing and planning fast; it is rebuilt from the store when it is missing.
+A store holds everything a restore needs: the data, its metadata and escrowed keys. The SQLite or Postgres index next to it only makes listing and planning fast; it is rebuilt from the store when it is missing. Details: [The index](/internals/the-index/).
 
 | In the bucket |
 | --- |

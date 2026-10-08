@@ -41,3 +41,5 @@ Every run sweeps, retires, compacts and builds presence filters; it collects gar
 | `goback scrub` | rehash every stored object |
 | `goback repair` | rewrite the archives holding corrupt ones |
 | `goback fix` | rebuild the index from the store |
+
+Details: [Snapshot lifecycle](/internals/lifecycle/), [Garbage collection](/internals/garbage-collection/).
