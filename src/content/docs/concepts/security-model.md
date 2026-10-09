@@ -38,6 +38,8 @@ Sealing is deterministic, which is what makes dedup work under one key. As a res
 
 The at-rest layer seals each record's payload, so with it a bucket reader no longer sees commit fields or names. Record headers stay readable: ref, type, size, timestamp and key ids. The server's index holds set names, agent ids, paths (tokens when sealed), sizes and times, and is not sealed by goback.
 
+The agent's cache under `--cache-dir` holds the objects it uploaded and read, as stored: names sealed under the store key, snapshot metadata such as WAL file names in the clear.
+
 ## Who can see what
 
 ### Self-hosted
