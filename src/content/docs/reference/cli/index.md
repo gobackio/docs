@@ -47,6 +47,7 @@ Global flags go before the command.
 | `--passphrase value` | without --store-key, open the store key the store keeps escrowed under this passphrase | `GOBACK_PASSPHRASE` |  |
 | `--at-rest-key value` | key file a local, gcs:// or s3:// store seals its archives with, from goback key at-rest; empty stores objects as received |  |  |
 | `--cache-dir value` | per-machine directory for the caches of every store: blobs a restore need not download, the stat and tree caches a backup skips unchanged files with, and a bucket's archive metadata; empty caches nothing | `GOBACK_CACHE_DIR` |  |
+| `--metadata-cache-size value` | size of a bucket's metadata cache under --cache-dir, past which the commits, trees and files least recently used are let go; 0 keeps them all |  | `1GiB` |
 | `--blob-cache-size value` | size the blob cache under --cache-dir is trimmed to after a backup or restore |  | `4GB` |
 | `--blob-cache-on-backup` | also put every uploaded blob into the blob cache, so a rollback to the last backup downloads nothing |  |  |
 | `--help`, `-h` | show help |  |  |

@@ -53,7 +53,7 @@ goback [global flags] postgres restore [flags] <data directory>
 | Flag | Description | Environment | Default |
 | --- | --- | --- | --- |
 | `--base-set value` | set the cluster's base backups go to; digits name it by id, from the set's head rather than the index |  |  |
-| `--wal-set value` | set the cluster's WAL goes to; digits name it by id, as --base-set |  |  |
+| `--wal-set value` | set the cluster's WAL goes to, for recovering past the end of the base; digits name it by id, as --base-set |  |  |
 | `--at value` | moment to recover to, as RFC 3339 (2026-10-02T14:30:00Z); the end of the WAL set when empty |  |  |
 | `--goback value` | command restore_command runs goback as, global flags included |  |  |
 
