@@ -7,7 +7,7 @@ A server gathers several agents into one store. It keeps the index and runs main
 
 ```sh
 goback --storage gcs://my-bucket --index /var/lib/goback/index \
-  server --secret-file secret --tls-cert cert.pem --tls-key key.pem
+  server --address :6060 --secret-file secret --tls-cert cert.pem --tls-key key.pem
 ```
 
 Agents point at it:
@@ -21,6 +21,7 @@ Every agent presents the shared secret and its own `--agent-id` (the hostname by
 
 | Flag | Does |
 | --- | --- |
+| `--address` | where it listens: `127.0.0.1:6060` by default, `:6060` for agents on other hosts |
 | `--secret`, `--secret-file` | the secret agents present |
 | `--tls-cert`, `--tls-key` | serve TLS |
 | `--plaintext-behind-proxy` | serve without TLS behind a proxy that terminates it |

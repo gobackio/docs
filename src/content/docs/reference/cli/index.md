@@ -17,6 +17,7 @@ goback [global flags] <command> [flags] [arguments]
 
 | Command | Does |
 | --- | --- |
+| [`agent`](./goback-agent/) | run a machine's backups on their schedules from one config file |
 | [`commit`](./goback-commit/) | Back up, list, restore, delete and undelete commits |
 | [`file`](./goback-file/) | Manage files |
 | [`fix`](./goback-fix/) | Detect and fix problems |
@@ -24,9 +25,10 @@ goback [global flags] <command> [flags] [arguments]
 | [`index`](./goback-index/) | Index objects the store already holds, without a rebuild |
 | [`key`](./goback-key/) | Manage the store key that encrypts names and contents before upload |
 | [`maintain`](./goback-maintain/) | Run the housekeeping that is due, as a store server does on its schedule; run it from cron |
+| [`mysql`](./goback-mysql/) | Back up and restore MySQL 5.5 through 8.4 servers: dumps and the binary log, each in a set of its own |
 | [`object`](./goback-object/) | Read stored objects by ref |
 | [`pin`](./goback-pin/) | Keep commits, trees or files regardless of retention |
-| [`postgres`](./goback-postgres/) | Back up and restore Postgres 9.6 through 17 clusters: base backups and the WAL archive, each in a set of its own |
+| [`postgres`](./goback-postgres/) | Back up and restore Postgres clusters: base backups from 9.6 on, and from 14 on the WAL streamed through a replication slot, each in a set of its own |
 | [`repair`](./goback-repair/) | Rewrite every archive holding corrupt objects, leaving the corruption behind |
 | [`scrub`](./goback-scrub/) | Rehash every stored object and report corruption; exits non-zero if any object fails |
 | [`server`](./goback-server/) | Serve one store to many agents over gRPC |
