@@ -2,6 +2,7 @@
 
 Write the way a person would say it.
 
+- **Write for experienced engineers.** Include what they need to act, and leave out what they already know.
 - **Start with the plain fact.**
 - **Say what goback does**, in its own terms.
 - **Use plain word order**: subject, verb, object, one fact per sentence.
