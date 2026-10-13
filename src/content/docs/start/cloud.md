@@ -5,7 +5,7 @@ description: Create an organisation, issue an agent key, back up to store.goback
 
 ## Sign up
 
-Create an organisation at [app.goback.io](https://app.goback.io). Everyone you invite signs in with their own account.
+Create an organisation at [cloud.goback.io](https://cloud.goback.io). Everyone you invite signs in with their own account.
 
 ## Keep a store key
 
