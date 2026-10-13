@@ -3,7 +3,7 @@ title: Go library
 description: Open a store, back up, restore, schedule, maintain and serve from a Go program.
 ---
 
-The goback CLI is built on its own packages, and a program can use them directly.
+Everything the CLI does, a Go program can do with these packages.
 
 :::caution
 The API is not stable yet and may change between minor versions.
