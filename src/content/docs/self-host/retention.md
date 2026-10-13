@@ -12,7 +12,9 @@ goback set retention home \
   --keep hourly=336 --keep daily=60 --keep weekly=12 --keep monthly
 ```
 
-The last bracket may drop its count to keep forever. Without a name, `set retention` shows or changes the store's defaults; `--inherit` drops a set's own policy.
+The last bracket may drop its count to keep forever. `--keep-last <n>` also keeps the newest commits, and `--keep-within <duration>` every commit younger than that. Without a name, `set retention` shows or changes the store's defaults; `--inherit` drops a set's own policy.
+
+Until the store or the set has a policy of its own, the built-in one applies: the brackets above, and the newest commit.
 
 ## What happens to a commit
 
