@@ -11,6 +11,8 @@ goback agent run --config /etc/goback/goback.yaml     # run until SIGTERM; SIGHU
 goback agent status --config /etc/goback/goback.yaml  # what the running agent last wrote
 ```
 
+`GOBACK_CONFIG` sets the file in place of `--config`.
+
 ## A config file
 
 ```yaml
@@ -205,3 +207,7 @@ sudo systemctl enable --now goback-agent
 
 - **Credentials.** Postgres passwords go in the `goback` user's `~/.pgpass`, MySQL's in the `defaults-extra-file`. Variables such as `GOOGLE_APPLICATION_CREDENTIALS` or `PGPASSFILE` go in a drop-in: `systemctl edit goback-agent`, then `Environment=…` under `[Service]`.
 - **Stopping.** The unit gives the agent 60 seconds after SIGTERM (`TimeoutStopSec`), so keep `shutdown-grace` below that.
+
+## Docker Compose
+
+The [Postgres](/self-host/postgres/) and [MySQL](/self-host/mysql/) examples run the agent as a Compose service, with `goback agent status --check` as its health check.
