@@ -12,3 +12,5 @@ A set's name is any text but digits alone, which name sets by id. `/` groups set
 A group is no object of its own. It exists while a set's name starts with it, and holds no commits. A set may have a group's name too: `shop` and `shop/dump` can both exist.
 
 [The agent](/self-host/agent/) writes a database backup's sets in a group of the backup's name: a backup named `shop` writes `shop/base` and `shop/wal` for Postgres, `shop/dump` and `shop/binlog` for MySQL.
+
+In goback cloud, an API key bound to a set reaches every set in its group too: a key bound to `shop` writes `shop`, `shop/dump` and `shop/binlog`, but not `shop-dump`. The console lists a group's sets together.

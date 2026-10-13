@@ -66,7 +66,7 @@ Every caller of a self-hosted server presents the same secret. The agent id is d
 | … with `write` (the default) | — | upload, start snapshots |
 | … with `read` | file contents (sealed if a store key was used) | restore |
 | … with `delete` | — | delete snapshots, sets, pins |
-| API key bound to one set | writes: only that set. Reads by ref and escrowed key files: not limited to the set | — |
+| API key bound to a set | writes: only that set and the sets under it (`<set>/…`, see [Sets](/concepts/sets/)). Reads by ref and escrowed key files: not limited to them | — |
 | org member (console) | sets, snapshots, sizes, activity; names as stored (tokens unless the org uses key hold); escrowed key files, to unlock | read-only |
 | org admin | as member | issue and revoke API keys, add escrowed copies, delete and pin snapshots, retention |
 | org owner | as admin | key hold and drop, members, billing, delete sets |
