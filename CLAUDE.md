@@ -1,15 +1,15 @@
 # Writing the docs
 
-Say things the way a person would. Prose is welcome; stilted phrasing is not.
+Write the way a person would say it.
 
-- **Lead with the plain fact.**
-- **Say what goback does, not what it resembles.** Readers take a comparison with another tool as a promise of compatibility.
-- **Plain word order.** Subject, verb, object, one fact per sentence. No inversions, no chains of clauses.
-- **What the reader can do, not how goback is built.** Internals belong in the Internals section only.
-- **No lead-ins that restate the heading.**
-- **Tables and code** where readers scan lists of fields, options or commands; sentences everywhere else.
-- **Describe, don't sell.** No pitch, no adjectives doing the work, no folksy lines.
-- **Claim only what a reader can check.** No absolutes; name the mechanism instead.
-- **No commitments that aren't made**: regions, prices, plans, tuning numbers.
+- **Start with the plain fact.**
+- **Say what goback does**, in its own terms.
+- **Use plain word order**: subject, verb, object, one fact per sentence.
+- **Tell readers what they can do.** How goback works inside goes in the Internals section.
+- **Let the heading introduce the section**, and start the section with its content.
+- **Use tables and code** where readers scan lists of fields, options or commands, and sentences everywhere else.
+- **Describe.** Facts and commands carry the page.
+- **Make claims a reader can check**, and name the mechanism behind them.
+- **Commit only to what is decided.**
 
-Read each sentence aloud. If nobody would say it that way, rewrite it.
+Read each sentence aloud and keep it only if it sounds natural.
