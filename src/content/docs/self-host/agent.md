@@ -3,7 +3,7 @@ title: The agent
 description: Run a machine's backups on their schedules from one config file.
 ---
 
-`goback agent run` runs a machine's backups in one long-running process: directories, Postgres clusters and MySQL servers, listed once in a YAML file with the store they go to.
+`goback agent run` runs all of a machine's backups in one long-running process. You list the directories, Postgres clusters and MySQL servers in a YAML file, together with the store they go to.
 
 ```sh
 goback agent check --config /etc/goback/goback.yaml   # validate, open the store, check the databases
@@ -11,7 +11,7 @@ goback agent run --config /etc/goback/goback.yaml     # run until SIGTERM; SIGHU
 goback agent status --config /etc/goback/goback.yaml  # what the running agent last wrote
 ```
 
-`GOBACK_CONFIG` sets the file in place of `--config`.
+You can set `GOBACK_CONFIG` instead of passing `--config`.
 
 ## A config file
 
@@ -54,13 +54,13 @@ backups:
       window: 168h
 ```
 
-This backs `/home` up every hour and `/srv` nightly at 02:30 between two hooks. It takes a Postgres base backup daily at 03:00 and streams the WAL, and dumps a MySQL server every six hours while it receives the binary log.
+This config backs up `/home` every hour, and `/srv` every night at 02:30 with a hook before and after. It takes a Postgres base backup every day at 03:00 and streams the WAL. It dumps a MySQL server every six hours and receives its binary log as it is written.
 
-The file is read strictly: an unknown key is an error, and `agent check` lists every problem at once. Durations are written as `30s`, `10m` or `6h`; there is no unit for days.
+An unknown key in the file is an error. `agent check` lists all problems at once. Write durations as `30s`, `10m` or `6h`. There is no unit for days, so a week is `168h`.
 
 ## store
 
-Each key is the global flag of the same name. A flag, or its environment variable, wins over the file; `agent check` and `agent run` say which ones did. A key left out takes the flag's default.
+Each key sets the global flag of the same name. A flag or its environment variable overrides the file. `agent check` and `agent run` report each override. A key you leave out takes the flag's default.
 
 | Key | Flag, variable | Default |
 | --- | --- | --- |
@@ -75,7 +75,7 @@ Each key is the global flag of the same name. A flag, or its environment variabl
 | `blob-cache-size` | `--blob-cache-size` | `4GB`; `0` for no bound |
 | `blob-cache-on-backup` | `--blob-cache-on-backup` | `true` |
 
-A `goback://` storage URL can't carry the server's secret in the file: name a file holding it with `?key-file=`, as in `goback://backup.example.com?key-file=/etc/goback/secret`. See [Storage and index](/self-host/storage/) and [Encryption and keys](/self-host/keys/).
+The agent rejects a `goback://` storage URL in the file that contains the server's secret. Put the secret in a file and name it with `?key-file=`, for example `goback://backup.example.com?key-file=/etc/goback/secret`. See [Storage and index](/self-host/storage/) and [Encryption and keys](/self-host/keys/).
 
 ## schedule
 
@@ -94,12 +94,12 @@ Each entry names one thing to back up and sets exactly one of `path`, `postgres`
 | `name` | required | unique; no slashes or surrounding spaces. It names the backup's sets |
 | `every` | | run this long after the last run started |
 | `cron` | | five fields, or `@hourly`, `@daily`, `@weekly`, `@monthly`, in the system's time zone |
-| `jitter` | `0` | move every run by a fixed offset below this, the same on every start, different per agent and backup |
+| `jitter` | `0` | shift every run by a fixed offset up to this long. The offset stays the same across restarts and differs per agent and backup |
 | `timeout` | none | cancel a run after this long |
 
-Set `every` or `cron`, not both. A path backup needs one; a database backup runs daily at 03:00 without one. These keys time the full backups; the receivers run all the time.
+Set `every` or `cron`, not both. A path backup needs one of them. A database backup without either runs every day at 03:00. These keys schedule the full backups only. WAL and binlog receivers run all the time.
 
-A backup that never ran, or missed a run while the agent was down, runs at once. The agent keeps no schedule of its own: a backup's last run is its set's newest complete commit, so a run of `goback commit new` counts too. A failed run is tried again after a minute, then after twice as long each time up to an hour, but never later than the next planned run.
+A backup that has never run, or that missed a run while the agent was down, runs right away. The agent doesn't keep its own record of runs. It takes a backup's last run from the newest complete commit in its set, so a manual `goback commit new` counts too. A failed run is retried after a minute. The wait doubles after each failure, up to an hour, but a retry comes no later than the next planned run.
 
 | Kind | Sets |
 | --- | --- |
@@ -107,51 +107,51 @@ A backup that never ran, or missed a run while the agent was down, runs at once.
 | `postgres` | `<name>/base`, and `<name>/wal` with `pitr` |
 | `mysql` | `<name>/dump`, and `<name>/binlog` with `pitr` |
 
-A set belongs to one backup.
+Two backups can't write to the same set.
 
 ### path
 
-The settings of [`goback commit new`](/reference/cli/goback-commit/#commit-new).
+These are the settings of [`goback commit new`](/reference/cli/goback-commit/#commit-new).
 
 | Key | Default | |
 | --- | --- | --- |
 | `dir` | required | the directory to back up |
-| `include`, `exclude` | | globs over paths that start with `/` at `dir`; an included path is backed up even when an exclude matches it |
+| `include`, `exclude` | | globs matched against paths under `dir`, written with a leading `/`. An included path is backed up even if an exclude matches it |
 | `workers` | the CPU count | files read and uploaded at once |
 | `force-hash` | `0` | percent of unchanged files to re-hash as a check |
 | `checkpoint-interval` | `30m` | write a partial commit this often, so an interrupted run keeps its progress |
 | `scan-workers` | `4` | directories listed ahead of the walk |
 | `read-retries` | `3` | re-reads of a file that changes while it is read |
 | `lost-retries` | `1` | walks again when the store lost objects of the run |
-| `progress-interval` | `15s` | how often the walk logs its progress; negative never |
+| `progress-interval` | `15s` | how often the walk logs its progress; a negative value turns it off |
 | `meta` | | `key: value` labels recorded in each commit |
-| `pre-hook`, `post-hook` | | shell commands run before the walk and after it, however it ends |
+| `pre-hook`, `post-hook` | | shell commands run before the walk, and after it whether it succeeded or not |
 | `hook-timeout` | `5m` | deadline of each hook |
 | `hook-optional` | `false` | back up anyway when the pre hook fails |
 
 ### postgres
 
-The settings of [`goback postgres`](/reference/cli/goback-postgres/). The cluster's settings are on the [Postgres page](/self-host/postgres/).
+These are the settings of [`goback postgres`](/reference/cli/goback-postgres/). The [Postgres page](/self-host/postgres/) lists the settings the cluster needs.
 
 | Key | Default | |
 | --- | --- | --- |
-| `dbname` | the `PG*` variables | libpq connection string. It must not hold a password: use `.pgpass` or `PGPASSFILE` |
-| `pg-basebackup` | | the `pg_basebackup` to run. Without it, base backups use a replication connection of their own from Postgres 15 on, and the `pg_basebackup` on the `PATH` before |
+| `dbname` | the `PG*` environment variables | the connection string, as `key=value` pairs or a `postgres://` URL. It can't hold a password; use `.pgpass` or `PGPASSFILE` |
+| `pg-basebackup` | | the `pg_basebackup` to run. Without it, goback takes base backups over its own replication connection on Postgres 15 and later. Older versions use the `pg_basebackup` on the `PATH` |
 | `pitr` | `true` | stream the WAL into `<name>/wal` for point-in-time recovery |
 | `window` | `336h` | how far back point-in-time recovery reaches |
 | `commit-every` | `1m` | how often new WAL is committed; at least `10s` |
 | `commit-bytes` | `256MiB` | how much new WAL makes the receiver commit early |
 | `allow-uncapped-slot` | `false` | stream although `max_slot_wal_keep_size` is `-1` |
-| `slot` | from `<name>/wal`: `goback_db_wal` for `db` | the replication slot |
+| `slot` | derived from `<name>/wal`, such as `goback_db_wal` for `db` | the replication slot |
 | `spool` | `<state-dir>/spool/<name>/wal` | where WAL waits for its commit |
 
 ### mysql
 
-The settings of [`goback mysql`](/reference/cli/goback-mysql/). The server's settings are on the [MySQL page](/self-host/mysql/).
+These are the settings of [`goback mysql`](/reference/cli/goback-mysql/). The [MySQL page](/self-host/mysql/) lists the settings the server needs.
 
 | Key | Default | |
 | --- | --- | --- |
-| `defaults-extra-file` | `~/.my.cnf` alone | MySQL option file read first, for the connection and its password |
+| `defaults-extra-file` | only `~/.my.cnf` | a MySQL option file read before the others, with the connection settings and password |
 | `mysql`, `mysqldump` | `mysql`, `mysqldump` | the client programs to run; the dump runs on the agent's host |
 | `pitr` | `true` | receive the binary log into `<name>/binlog`. The receiver starts after the first dump |
 | `window` | `336h` | how far back point-in-time recovery reaches |
@@ -175,11 +175,11 @@ shop/dump    mysql-dump        cron 0 */6 * * *  never     2026-10-13 12:18:56
 shop/binlog  mysql-receive     always            never     2026-10-13 12:18:56
 ```
 
-It also connects to each database and lists what it lacks for the backup as configured: for Postgres the version, the `REPLICATION` attribute, `max_slot_wal_keep_size`, a free slot and the `pg_hba.conf` lines; for MySQL `log_bin`, `server_id`, the privileges and a free server id. It exits 2 on any problem.
+It also connects to each database and lists anything missing for the configured backup. For Postgres, it checks the version, the `REPLICATION` attribute, `max_slot_wal_keep_size`, a free slot and the `pg_hba.conf` lines. For MySQL, it checks `log_bin`, `server_id`, the privileges and a free server id. It exits with status 2 if it finds a problem.
 
 ## Status and health
 
-A running agent writes `status.json` into its state dir at least once a minute. `goback agent status` prints it without touching the store: each job's state, last start, result, last success, failures in a row and next due time. With `--json` it prints the file as JSON.
+A running agent writes `status.json` into its state dir at least once a minute. `goback agent status` prints it without contacting the store: each job's state, last start, result, last success, failures in a row and next due time. `--json` prints the file as JSON.
 
 `goback agent status --check` is a health check for systemd, Docker or a monitor. It exits 0 when healthy, 2 when there is no status to read, and 1 when:
 
@@ -189,11 +189,11 @@ A running agent writes `status.json` into its state dir at least once a minute. 
 
 ## Reloading
 
-SIGHUP re-reads the file and applies the `backups` section: a changed backup is planned again, a running one finishes as it was. Changes to `store` and `schedule` wait for a restart, and the agent logs that they do. An invalid file is logged and the old one kept.
+On SIGHUP, the agent re-reads the file and applies the `backups` section. A changed backup is rescheduled. A run in progress finishes with its old settings. Changes to `store` and `schedule` take effect only after a restart; the agent logs which changes are waiting. If the new file is invalid, the agent logs the errors and keeps the old one.
 
 ## systemd
 
-[contrib/systemd/goback-agent.service](https://github.com/gobackio/goback/blob/master/contrib/systemd/goback-agent.service) runs `/usr/local/bin/goback agent run --config /etc/goback/goback.yaml` as the user `goback`, restarts it on failure, and reloads it with `systemctl reload`:
+[contrib/systemd/goback-agent.service](https://github.com/gobackio/goback/blob/master/contrib/systemd/goback-agent.service) runs `/usr/local/bin/goback agent run --config /etc/goback/goback.yaml` as the user `goback`. systemd restarts the agent if it fails, and `systemctl reload` reloads its config:
 
 ```sh
 sudo useradd --system --create-home --home-dir /var/lib/goback --shell /usr/sbin/nologin goback

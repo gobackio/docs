@@ -5,36 +5,38 @@ description: Which snapshots a set keeps, and the housekeeping that frees what i
 
 ## Retention
 
-A set keeps the last commit of each calendar hour, day, week or month, by brackets counted back from now, newest first:
+A retention policy keeps the last commit of each calendar hour, day, week or month. Each `--keep` bracket covers a number of these periods. The brackets run back from now one after the other, newest first:
 
 ```sh
 goback set retention home \
   --keep hourly=336 --keep daily=60 --keep weekly=12 --keep monthly
 ```
 
-The last bracket may drop its count to keep forever. `--keep-last <n>` also keeps the newest commits, and `--keep-within <duration>` every commit younger than that. Without a name, `set retention` shows or changes the store's defaults; `--inherit` drops a set's own policy.
+With this policy, the set keeps one commit per hour for the last 336 hours, then one per day for the 60 days before that, then one per week for 12 weeks. Older commits are kept one per month. The last bracket can leave out its count to keep its commits forever.
 
-Until the store or the set has a policy of its own, the built-in one applies: the brackets above, and the newest commit.
+`--keep-last <n>` also keeps the newest `n` commits. `--keep-within <duration>` keeps every commit younger than that. Without a set name, `set retention` shows or changes the store's default policy. `--inherit` removes a set's own policy, so the store's default applies again.
+
+If neither the set nor the store has a policy, goback uses a built-in one: the brackets above, plus the newest commit.
 
 ## What happens to a commit
 
-| Stage | Reversible |
+| Stage | Undo with |
 | --- | --- |
 | deleted by hand: waits in the trash (`--trash-days`) | `commit undelete` |
 | expired by the policy: removed from the set at the next `maintain` run | `commit unretire`, until collected |
-| no live commit or pin reaches its objects: garbage collected | no |
+| no live commit or pin reaches its objects: garbage collected | can't be undone |
 
 [`goback pin`](/reference/cli/goback-pin/) keeps a commit regardless of retention.
 
 ## Maintenance
 
-Without a server, run `goback maintain` from cron, say hourly:
+If you don't run a server, run `goback maintain` from cron, for example every hour:
 
 ```sh
 0 * * * * goback maintain
 ```
 
-Every run sweeps, retires, compacts and builds presence filters; it collects garbage once the last collection is older than `--gc-interval`. A [server](/self-host/server/) runs all of this itself.
+Each run removes the commits that retention or the trash let go, compacts small archives and does other housekeeping. When the last garbage collection is older than `--gc-interval`, the run also collects garbage. A [server](/self-host/server/) does all of this on its own schedule.
 
 ## Integrity
 
@@ -44,4 +46,4 @@ Every run sweeps, retires, compacts and builds presence filters; it collects gar
 | `goback repair` | rewrite the archives holding corrupt ones |
 | `goback fix` | rebuild the index from the store |
 
-Details: [Snapshot lifecycle](/internals/lifecycle/), [Garbage collection](/internals/garbage-collection/).
+See [Snapshot lifecycle](/internals/lifecycle/) and [Garbage collection](/internals/garbage-collection/) for details.

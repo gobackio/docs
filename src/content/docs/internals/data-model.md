@@ -3,7 +3,7 @@ title: Data model
 description: Commits, trees, files and chunks, content-addressed and packed into archives.
 ---
 
-Objects are content-addressed by SHA-256, like git's.
+Every object is addressed by a SHA-256 hash derived from its content.
 
 | Object | Holds |
 | --- | --- |
@@ -12,12 +12,12 @@ Objects are content-addressed by SHA-256, like git's.
 | **file** | the chunks a file is made of, in order |
 | **chunk** | a piece of content, cut with FastCDC |
 
-FastCDC cuts at content-defined boundaries, so an edit changes only the chunks around it, and the same chunk is stored once across files, commits and sets. A backup uploads only what the store does not already hold; a restore downloads only what the target does not already hold.
+FastCDC cuts at boundaries that depend on the content, so an edit changes only the chunks around it. The same chunk is stored once across files, commits and sets. A backup uploads only what the store doesn't already hold, and a restore downloads only what the target doesn't already hold.
 
 ## Archives
 
-Objects are packed into archives, each with its own index of what it holds. Compaction merges small archives; garbage collection rewrites archives that are mostly dead.
+Objects are packed into archives, and each archive has its own index of what it holds. Compaction merges small archives. Garbage collection rewrites archives that are mostly dead.
 
 ## Sets
 
-A set is a named series of commits: one machine's home directory, one database's WAL. Retention is per set; deduplication is across the whole store. Names group sets: see [Sets](/concepts/sets/).
+A set is a named series of commits, such as one machine's home directory or one database's WAL. Each set has its own retention, while deduplication works across the whole store. Names group sets; see [Sets](/concepts/sets/).

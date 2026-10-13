@@ -9,15 +9,15 @@ Create an organisation at [cloud.goback.io](https://cloud.goback.io). Everyone y
 
 ## Keep a store key
 
-On **Keys**, add an escrowed store key and choose a passphrase. Agents fetch the key from the store and open it with the passphrase, so a machine never needs a key file.
+On **Keys**, add an escrowed store key and choose a passphrase. Agents fetch the key from the store and open it with the passphrase, so your machines don't need a key file.
 
 :::caution
-We cannot recover the passphrase. Without it, nothing can be restored.
+goback cloud can't recover the passphrase. Without it, your backups can't be restored.
 :::
 
 ## Issue an agent key
 
-On **Keys**, issue an agent key. It is shown once.
+On **Keys**, issue an agent key. Copy it right away: it is shown only once.
 
 ## Back up
 

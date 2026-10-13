@@ -7,15 +7,15 @@ description: Trash, tombstones, pins, and when a snapshot's data is finally dele
 | --- | --- | --- |
 | **live** | `commit new` | |
 | **trash** | `commit delete` or `set delete`; waits `--trash-days` | `commit undelete`, `set undelete` |
-| **tombstoned** | the retention policy lets it go, or the trash window ends; applied by retirement | `commit unretire`, until collected |
+| **tombstoned** | the retention policy lets it go, or its time in the trash ends; applied by retirement | `commit unretire`, until collected |
 | **collected** | garbage collection finds none of its objects reachable from a live commit or pin | — |
 
-`set delete --erase` skips the trash window.
+`set delete --erase` skips the trash.
 
 ## Retirement
 
-A set's policy is applied when a commit is indexed and when the policy changes: the commits it lets go are marked retired. Retirement runs on every `maintain` (and on a server's schedule). It tombstones the retired commits and the trashed ones whose window has ended. Tombstones are stored in the bucket, so a rebuilt index applies them again.
+goback applies a set's policy when a commit is indexed and when the policy changes. The commits the policy lets go are marked retired. Retirement runs on every `maintain`, and on a server's schedule. It tombstones the retired commits and the trashed ones whose time in the trash has ended. Tombstones are stored in the bucket, so a rebuilt index applies them again.
 
 ## Pins
 
-A pin keeps a commit live whatever the policy says. Pins are objects in the store and count as roots for garbage collection.
+A pin keeps a commit live whatever the policy says. Pins are objects in the store, and garbage collection counts them as roots.

@@ -40,14 +40,10 @@ defer repo.Close()
 | --- | --- |
 | `Storage` | required |
 | `Index` | required for a directory or bucket store |
-| `AgentID`, `StoreKey`, `Passphrase`, `AtRestKey`, `CacheDir`, `MetadataCacheSize`, `BlobCacheSize` | as the [global flags](/reference/cli/) |
-| `Logger` | |
+| `AgentID`, `StoreKey`, `Passphrase`, `AtRestKey`, `CacheDir`, `MetadataCacheSize`, `BlobCacheSize` | the same settings as the [global flags](/reference/cli/) |
+| `Logger` | where `Open` logs; nil means `slog.Default` |
 
-| `repo.Key(ctx)` returns | When |
-| --- | --- |
-| the key in `StoreKey` | `StoreKey` is set |
-| the escrowed key, opened with `Passphrase` | `Passphrase` is set |
-| nil | the store is not encrypted |
+`repo.Key(ctx)` returns the store key. It loads the key file in `StoreKey`, or opens the escrowed key with `Passphrase`. When neither is set, the store is not encrypted and the key is nil.
 
 ## Back up
 
@@ -73,12 +69,7 @@ job.AfterRun(ctx, env) // compact the store and trim the caches between runs
 | `Trees` | WAL and binlog receivers keep their commits and trees in memory |
 | `Blobs` | restores read recently uploaded data locally |
 
-| Job | Runs |
-| --- | --- |
-| `job.Path` | a path backup |
-| `job.PostgresBase` | a Postgres base backup |
-| `job.MySQLDump` | a MySQL dump |
-| `job.PostgresReceive`, `job.MySQLReceive` | until their channel closes, then commit |
+`job.Path` runs a path backup, `job.PostgresBase` a Postgres base backup and `job.MySQLDump` a MySQL dump. `job.PostgresReceive` and `job.MySQLReceive` receive WAL or binlogs until their `stop` channel is closed, then make a last commit.
 
 ## Restore
 
@@ -98,10 +89,7 @@ restorer := &backup.Restorer{Store: repo.Store, Key: key}
 err = restorer.RestoreTree(ctx, commit, "/srv/restored", backup.TreeOptions{})
 ```
 
-| Find a commit | |
-| --- | --- |
-| `backup.PickCommit(ctx, index, set, nil, t)` | the set's newest commit at or before `t` |
-| `repo.LatestCommit(ctx, set)` | the set's newest commit, by name or id, also without an index |
+`backup.PickCommit(ctx, index, set, nil, t)` finds the set's newest commit at or before `t`. `repo.LatestCommit(ctx, set)` finds the set's newest commit by name or id, and also works without an index.
 
 | `TreeOptions` | |
 | --- | --- |
@@ -111,9 +99,9 @@ err = restorer.RestoreTree(ctx, commit, "/srv/restored", backup.TreeOptions{})
 | `Delete` | remove what the commit doesn't hold |
 | `Listed`, `Written`, `Done`, `Removing` | progress callbacks |
 
-Paths are slash-separated, relative to the set's directory.
+Paths are slash-separated and relative to the set's directory.
 
-Two entries next to the originals, renamed:
+This restores two entries next to the originals, under new names:
 
 ```go
 err = restorer.RestoreTree(ctx, commit, "/home", backup.TreeOptions{
@@ -124,7 +112,7 @@ err = restorer.RestoreTree(ctx, commit, "/home", backup.TreeOptions{
 })
 ```
 
-One file, as of a time:
+This restores one file as it was at a given time:
 
 ```go
 node, outcome, err := restorer.RestorePath(ctx, repo.Index, "home", "projects/notes.md", time.Now(), "/tmp/notes.md")
@@ -132,18 +120,15 @@ node, outcome, err := restorer.RestorePath(ctx, repo.Index, "home", "projects/no
 
 | `Restorer` | |
 | --- | --- |
-| `Seeds`, `Cache`, `Workers`, `Overwrite`, `Verify`, `DryRun`, `Salvage`, `Rechunk` | as the flags of [`commit restore`](/reference/cli/goback-commit/#commit-restore) and [`file restore`](/reference/cli/goback-file/#file-restore); `Cache` from `repo.BlobCache` |
+| `Seeds`, `Cache`, `Workers`, `Overwrite`, `Verify`, `DryRun`, `Salvage`, `Rechunk` | the same settings as the flags of [`commit restore`](/reference/cli/goback-commit/#commit-restore) and [`file restore`](/reference/cli/goback-file/#file-restore); get `Cache` from `repo.BlobCache` |
 | `FS` | where files are written; nil is the local disk |
 | `Stats()` | files written, unchanged and skipped; bytes by source |
 
 ### Restoring elsewhere
 
-| `FS` implements | Restore |
-| --- | --- |
-| `backup.WriteFS` | writes each file front to back, up to 32 parts ahead |
-| `backup.RandomWriteFS` | reuses existing data, resumes partial files, fetches in parallel |
+To restore somewhere other than the local disk, set `FS`. If it implements `backup.WriteFS`, the restore writes each file from front to back and fetches up to 32 parts ahead. If it implements `backup.RandomWriteFS`, the restore can also reuse data already in a file, resume partial files and fetch parts in parallel.
 
-`Symlink`, `Chmod` or `Chtimes` may return an error matching `errors.ErrUnsupported`; the restore skips them and counts skipped symlinks in `RestoreStats.Unsupported`.
+`Symlink`, `Chmod` and `Chtimes` may return an error matching `errors.ErrUnsupported`. The restore then skips that step, and counts skipped symlinks in `RestoreStats.Unsupported`.
 
 ## Run backups on schedules
 
@@ -174,28 +159,23 @@ a := &agent.Agent{
 return a.Run(ctx, cfg.Tasks()) // until ctx ends
 ```
 
-| | |
-| --- | --- |
-| `cfg.Tasks()` | the tasks of an [agent config file](/self-host/agent/) |
-| `a.Reload(tasks)` | replace the tasks of a running agent |
-| `Task.Run` | a scheduled task, with a `Plan` from `agent.Every` or `agent.Cron` |
-| `Task.Serve` | a task that runs all the time |
+`cfg.Tasks()` returns the tasks of an [agent config file](/self-host/agent/). You can also build tasks yourself. A task with `Run` runs on a schedule, with a `Plan` from `agent.Every` or `agent.Cron`. A task with `Serve` runs all the time. `a.Reload(tasks)` replaces the tasks of a running agent.
 
 ## Maintenance
 
 ```go
 runner := maintenance.NewRunner(repo.Store, repo.Index, maintenance.DefaultSchedule)
 
-ran, err := runner.Due(ctx) // once, as goback maintain does
+ran, err := runner.Due(ctx) // run what is due once, for example from cron
 // or
-go runner.Run(ctx) // on the schedule, until ctx ends
+go runner.Run(ctx) // run each job on its schedule until ctx ends
 ```
 
-`repo.Compact(ctx)` compacts only.
+`repo.Compact(ctx)` only compacts the store.
 
 ## Serve a store
 
-As [`goback server`](/self-host/server/), until ctx ends:
+`repo.Serve` serves the store to agents until ctx ends. It also runs the maintenance jobs of its schedule. See [Running a server](/self-host/server/).
 
 ```go
 listener, err := net.Listen("tcp", ":6060")

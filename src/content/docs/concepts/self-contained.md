@@ -3,17 +3,13 @@ title: Self-contained backups
 description: Everything a restore needs is in the bucket.
 ---
 
-A store holds everything a restore needs: the data, its metadata and escrowed keys. The SQLite or Postgres index next to it only makes listing and planning fast; it is rebuilt from the store when it is missing. Details: [The index](/internals/the-index/).
+The bucket holds file contents and metadata, every snapshot of every set, and the escrowed store keys. With the store key or its passphrase, that is all a restore needs.
 
-| In the bucket |
-| --- |
-| file contents and metadata |
-| every snapshot of every set |
-| escrowed store keys |
+The SQLite or Postgres index next to the store only speeds up listing and planning. If it is lost, `goback fix` rebuilds it from the store. See [The index](/internals/the-index/).
 
 ## Rebuilding
 
-On a new machine, or after the index is lost:
+On a new machine, or after the index is lost, run:
 
 ```sh
 goback --storage gcs://my-bucket --index /var/lib/goback/index fix

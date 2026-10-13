@@ -3,14 +3,16 @@ title: Sets
 description: Named series of snapshots, grouped by their names.
 ---
 
-A set is a named series of commits: one machine's home directory, one database's base backups, its WAL. Every commit belongs to one set. Retention is per set; deduplication spans the whole store.
+A set is a named series of commits, such as one machine's home directory, one database's base backups or its WAL. Every commit belongs to one set. Each set has its own retention, while deduplication works across the whole store.
 
 ## Names
 
-A set's name is any text but digits alone, which name sets by id. `/` groups sets: `shop/dump` and `shop/binlog` are both in the group `shop`, and `eu/shop/dump` is in `eu/shop` and in `eu`.
+A set name can be any text except a plain number, because numbers refer to sets by id.
 
-A group is no object of its own. It exists while a set's name starts with it, and holds no commits. A set may have a group's name too: `shop` and `shop/dump` can both exist.
+A `/` in a name puts the set in a group. `shop/dump` and `shop/binlog` are both in the group `shop`. `eu/shop/dump` is in both `eu/shop` and `eu`.
 
-[The agent](/self-host/agent/) writes a database backup's sets in a group of the backup's name: a backup named `shop` writes `shop/base` and `shop/wal` for Postgres, `shop/dump` and `shop/binlog` for MySQL.
+A group isn't stored as anything of its own and holds no commits. It exists as long as some set's name starts with it. A set can have the same name as a group: `shop` and `shop/dump` can both exist.
 
-In goback cloud, an API key bound to a set reaches every set in its group too: a key bound to `shop` writes `shop`, `shop/dump` and `shop/binlog`, but not `shop-dump`. The console lists a group's sets together.
+[The agent](/self-host/agent/) puts a database backup's sets in a group named after the backup. A backup named `shop` writes `shop/base` and `shop/wal` for Postgres, or `shop/dump` and `shop/binlog` for MySQL.
+
+In goback cloud, an API key bound to a set can also write every set in its group. A key bound to `shop` can write `shop`, `shop/dump` and `shop/binlog`, but not `shop-dump`. The console lists a group's sets together.

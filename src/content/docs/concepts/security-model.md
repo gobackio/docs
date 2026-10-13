@@ -3,7 +3,7 @@ title: Security model
 description: What goback encrypts, who can see what, what it detects, and the risks it accepts.
 ---
 
-goback has three layers. Each is separate, and the store key is optional.
+goback encrypts at three independent layers. The store key is optional.
 
 | Layer | Held by | Protects against | Primitive |
 | --- | --- | --- | --- |
@@ -11,7 +11,11 @@ goback has three layers. Each is separate, and the store key is optional.
 | **At-rest key** | the server | someone reading the bucket without the server | Tink XChaCha20-Poly1305, one derived key per archive (HKDF-SHA256) |
 | **TLS** | agent ↔ server | the network path | TLS; a self-hosted server requires 1.2 or later |
 
-An agent run without `--store-key` or `--passphrase` uploads in the clear. An agent with a key always seals; the store policy can require a key but cannot turn sealing off. The at-rest key is optional when you self-host. goback cloud is deployed with at-rest sealing, each store's key wrapped by a cloud KMS key. A self-hosted server refuses to start without TLS unless told a proxy terminates it; the agent refuses to send its secret without TLS unless the URL is `goback+insecure://`.
+An agent run without `--store-key` or `--passphrase` uploads data unencrypted. An agent with a key seals names and contents. A store policy can require a key, but it can't turn sealing off.
+
+When you self-host, the at-rest key is optional. goback cloud seals data at rest. Each store's at-rest key is wrapped by a cloud KMS key.
+
+A self-hosted server won't start without TLS unless you tell it that a proxy terminates TLS. An agent won't send its secret without TLS unless the URL starts with `goback+insecure://`.
 
 ## What the store key hides
 
@@ -31,14 +35,14 @@ An agent run without `--store-key` or `--passphrase` uploads in the clear. An ag
 | which store key sealed an object (key id) | **visible** |
 | object counts, sizes, upload timing | **visible** |
 
-Sealing is deterministic, which is what makes dedup work under one key. As a result:
+Sealing is deterministic: the same input under the same key gives the same ciphertext. This lets dedup work under one key. It also means that:
 
 - the same name in the same directory gives the same token in every snapshot, so an observer can follow one entry across snapshots and see when its size or mtime changes;
 - identical chunks, and identical small files, give identical ciphertext.
 
-The at-rest layer seals each record's payload, so with it a bucket reader no longer sees commit fields or names. Record headers stay readable: ref, type, size, timestamp and key ids. The server's index holds set names, agent ids, paths (tokens when sealed), sizes and times, and is not sealed by goback.
+The at-rest layer seals each record's payload. With it, someone reading the bucket can't see commit fields or names. Record headers stay readable: ref, type, size, timestamp and key ids. The server's index holds set names, agent ids, paths (tokens when sealed), sizes and times. goback doesn't encrypt the index.
 
-The agent's cache under `--cache-dir` holds the objects it uploaded and read, as stored: names sealed under the store key, snapshot metadata such as WAL file names in the clear.
+The agent's cache under `--cache-dir` holds the objects the agent uploaded and read, in their stored form. Names in it are sealed under the store key. Snapshot metadata, such as WAL file names, is not.
 
 ## Who can see what
 
@@ -46,59 +50,59 @@ The agent's cache under `--cache-dir` holds the objects it uploaded and read, as
 
 | Party | Can see | Can do |
 | --- | --- | --- |
-| reads the bucket | without an at-rest key: everything the agent sent (everything, if no store key). With one: headers, sizes, counts, timing. Escrowed key files in either case | offline guessing of the escrow passphrase |
-| writes to the bucket | as above | delete or corrupt archives; nothing in goback prevents it |
-| holds the server's shared secret (any agent) | everything stored that is not sealed under the store key | every API call, including deleting snapshots, requiring encryption through the store policy, fetching escrowed key files |
-| runs `goback server` | everything agents send that is not sealed under the store key; the at-rest key | withhold or roll back snapshots |
-| holds the store key | everything | restore anything |
+| someone who reads the bucket | without an at-rest key: everything the agent sent (everything, if no store key). With one: headers, sizes, counts, timing. Escrowed key files in either case | guess the escrow passphrase offline |
+| someone who writes to the bucket | as above | delete or corrupt archives; goback doesn't prevent this |
+| any agent, or anyone with the server's shared secret | everything stored that is not sealed under the store key | every API call, including deleting snapshots, requiring encryption through the store policy, fetching escrowed key files |
+| whoever runs `goback server` | everything agents send that is not sealed under the store key; the at-rest key | withhold or roll back snapshots |
+| whoever holds the store key | everything | restore anything |
 
-Every caller of a self-hosted server presents the same secret. The agent id is declared by the caller and is not authenticated.
+All callers of a self-hosted server present the same secret. Each caller declares its own agent id, and the server doesn't authenticate it.
 
 ### goback cloud
 
 | Party | Can see | Can do |
 | --- | --- | --- |
-| reads the bucket (e.g. leaked credentials) | headers, sizes, counts, timing, tenant ids in paths, escrowed key files, KEK-sealed held keys | offline guessing of escrow passphrases |
+| someone who reads the bucket (for example with leaked credentials) | headers, sizes, counts, timing, tenant ids in paths, escrowed key files, KEK-sealed held keys | guess escrow passphrases offline |
 | goback (the service and its operators) | everything an org sends that is not sealed under its store key; with key hold, the store key itself | everything the service does, for any org |
 | another org on the same store | not your sets or snapshots. Without a store key on your side: whether a given chunk exists in the store (see Dedup) | — |
-| any agent API key of the org | the org's snapshot metadata | — |
+| any of the org's agent API keys | the org's snapshot metadata | — |
 | … with `write` or `read` | escrowed key files | — |
 | … with `write` (the default) | — | upload, start snapshots |
 | … with `read` | file contents (sealed if a store key was used) | restore |
 | … with `delete` | — | delete snapshots, sets, pins |
-| API key bound to a set | writes: only that set and the sets under it (`<set>/…`, see [Sets](/concepts/sets/)). Reads by ref and escrowed key files: not limited to them | — |
+| an API key bound to a set | writes only to that set and the sets under it (`<set>/…`, see [Sets](/concepts/sets/)). Reads by ref and fetches of escrowed key files are not limited to them | — |
 | org member (console) | sets, snapshots, sizes, activity; names as stored (tokens unless the org uses key hold); escrowed key files, to unlock | read-only |
 | org admin | as member | issue and revoke API keys, add escrowed copies, delete and pin snapshots, retention |
 | org owner | as admin | key hold and drop, members, billing, delete sets |
 
-The agent id is a label in goback cloud; access is decided by the API key alone.
+In goback cloud, the agent id is only a label. The API key alone decides access.
 
 ### Key hold
 
-An owner can hand the org's store key to goback so listings show real names to every member.
+An owner can give goback the org's store key. Listings then show real names to every member.
 
-- The whole key file is uploaded: both keysets, which open names **and contents**. goback's code uses it to open names and symlink targets for listings.
-- It is kept in the bucket, sealed under the KEK and bound to store, org and key id.
-- Dropping it deletes the stored copy and the in-memory one.
-- While it is held, goback can read everything sealed under that key.
+- The whole key file is uploaded. Its two keysets open names **and contents**. goback uses the key to decrypt names and symlink targets for listings.
+- The key is kept in the bucket, sealed under the key-encryption key (KEK) and bound to the store, org and key id.
+- Dropping the key deletes both the stored copy and the copy in memory.
+- While goback holds the key, it can read everything sealed under it.
 
 ### Escrow
 
-`goback key escrow` wraps the key file as an age file under a passphrase (scrypt, age's default work factor 2^18). `age -d` opens it.
+`goback key escrow` encrypts the key file with a passphrase into an age file (scrypt, with age's default work factor of 2^18). You can open the file with `age -d`.
 
-- The copy is stored in the bucket, not at-rest sealed.
-- Self-hosted: every holder of the server secret can fetch it.
-- goback cloud: API keys with `write` or `read` can fetch it, since agents run with `--passphrase` need it to back up; console members fetch it to unlock, and each fetch is recorded in Activity with who made it.
-- Anyone who has it can guess passphrases offline. goback's tools require at least 12 characters when they create one; copies made earlier are not rechecked.
+- The escrowed copy is stored in the bucket without at-rest sealing.
+- Self-hosted: anyone with the server secret can fetch it.
+- goback cloud: API keys with `write` or `read` can fetch it, because agents run with `--passphrase` need it to back up. Console members fetch it to unlock. Activity records each fetch and who made it.
+- Anyone who has the copy can guess the passphrase offline. goback requires a passphrase of at least 12 characters when it creates a copy. Existing copies aren't rechecked.
 
 ### Console unlock
 
 The console decrypts names in the browser with a WebAssembly module.
 
-- The key comes from a key file you supply, or from an escrowed file the console fetches when you click Unlock, opened with the passphrase you enter.
-- **Keep on this browser** stores the key file in IndexedDB, AES-GCM-sealed under a non-extractable browser key. Script on the page can still use that key.
-- The module opens names, symlink targets and paths. The console does not download file contents.
-- The page and the module are served by goback. Unlocking means trusting the code served at that moment: a changed page could read the key.
+- The key comes from a key file you supply, or from the escrowed copy. The console fetches that copy when you click Unlock and opens it with the passphrase you enter.
+- **Keep on this browser** stores the key file in IndexedDB, sealed with AES-GCM under a non-extractable browser key. Scripts on the page can still use that browser key.
+- The module decrypts names, symlink targets and paths. The console doesn't download file contents.
+- goback serves the page and the module. When you unlock, you trust the code served at that moment: a changed page could read the key.
 
 ## Dedup
 
@@ -110,11 +114,11 @@ The console decrypts names in the browser with a WebAssembly module.
 | scope without a store key | the whole store; in goback cloud, every keyless org on the same store |
 | chunker | FastCDC, 16/64/256 KiB, not keyed |
 
-Implications:
+This means that:
 
-- Without a store key, anyone who can upload to the store can test whether a chunk exists in it, from any org. This confirms whether someone stored a known file.
-- Chunk boundaries depend only on content and their lengths are visible, even with a store key. Someone with the metadata can match the length sequence of a known file.
-- Presence filters (Bloom filters over chunk ids) of the whole store go to every agent by default. In goback cloud, other orgs' filters arrive without their set name or snapshot.
+- Without a store key, anyone from any org who can upload to the store can test whether a chunk exists in it. That shows whether someone stored a known file.
+- Chunk boundaries depend only on content. Chunk lengths are visible even with a store key, so someone with the metadata can match the sequence of lengths of a known file.
+- By default, every agent receives presence filters (Bloom filters over chunk ids) for the whole store. In goback cloud, filters from other orgs come without their set name or snapshot.
 
 ## Integrity
 
@@ -132,8 +136,8 @@ Implications:
 Not detected:
 
 - **Rollback and withholding.** Snapshots are not signed with the store key. The server stamps their time and decides what "latest" is. A dishonest store can hide snapshots, serve an older one as latest, or offer a snapshot built from objects it already holds.
-- **Deletion.** Anyone with write access to the bucket can delete it. The hosted bucket has no object lock and no provider soft delete. Deleted snapshots go to a trash first only when deleted through goback.
-- **Unkeyed hashes.** Someone who can rewrite the bucket can rewrite a stored hash with it.
+- **Deletion.** Anyone with write access to the bucket can delete its contents. The hosted bucket has no object lock and no provider soft delete. Only snapshots deleted through goback go to the trash first.
+- **Unkeyed hashes.** Someone who can rewrite the bucket can rewrite a stored hash along with the data.
 
 ## Keys and recovery
 
@@ -143,11 +147,11 @@ Not detected:
 | rotation | not supported; a store keeps escrowed copies of one key | `goback key at-rest --rotate`; older keys keep opening, compaction re-seals. No rotation command in goback cloud |
 | stored as | a cleartext JSON file, mode 0600 | self-hosted: a cleartext file on the server. goback cloud: sealed under a KMS key |
 
-goback cloud cannot restore your store key unless you use key hold, and it has no call that returns a held key.
+goback cloud can't recover your store key unless you use key hold. Even then, it has no API call that returns a held key.
 
 ## Design decisions
 
-| Decision and its risk | What it buys | Avoid it |
+| Decision and its risk | What it gives you | How to avoid the risk |
 | --- | --- | --- |
 | encryption is opt-in: an agent without a store key uploads in the clear | backups work before any key is set up; store-wide dedup | always run agents with `--store-key` or `--passphrase` |
 | metadata stays visible: sizes, times, modes, tree shape, set names, hostnames, labels | listings, retention, sizing and billing without the key | use neutral set names and `--agent-id`; self-host with an at-rest key against bucket readers |

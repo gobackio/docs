@@ -3,7 +3,7 @@ title: The index
 description: What the SQLite or Postgres index holds and how it is rebuilt.
 ---
 
-The index makes listing commits, finding files and planning backups fast. Everything in it is derived from the store.
+The index speeds up listing commits, finding files and planning backups. Everything in it is derived from the store.
 
 | Holds | Derived from |
 | --- | --- |
@@ -18,4 +18,4 @@ The index makes listing commits, finding files and planning backups fast. Everyt
 goback --storage gcs://my-bucket --index /var/lib/goback/index fix
 ```
 
-`fix` reads the archives and set heads and writes a fresh index. Commits that name no set go to a placeholder set.
+`fix` reads the archives and set heads and writes a fresh index. Commits that don't name a set go into a placeholder set.

@@ -15,7 +15,7 @@ go install github.com/gobackio/goback/cmd/goback@latest
 goback key new my-store
 ```
 
-This writes `store.key`. Names and contents are encrypted with it before they leave the machine. **Keep a copy elsewhere: without it, nothing can be restored.** To keep it in the store under a passphrase instead, see [Keys](/self-host/keys/).
+This writes `store.key`. goback encrypts file names and contents with it before they leave the machine. **Keep a copy somewhere else. Without it, your backups can't be restored.** To keep the key in the store under a passphrase instead, see [Keys](/self-host/keys/).
 
 ## Point at a store
 
@@ -27,10 +27,10 @@ export GOBACK_STORAGE=/backups/store GOBACK_INDEX=/backups/index
 | --- | --- |
 | `/path` | a local directory |
 | `gcs://bucket` | Google Cloud Storage |
-| `s3://bucket?endpoint=…` | anything S3-compatible |
+| `s3://bucket?endpoint=…` | an S3-compatible bucket |
 | `goback://<secret>@host:port` | a [goback server](/self-host/server/) |
 
-`GOBACK_INDEX` is a directory for SQLite or a `postgres://` URL. A server keeps its own, so agents of a server need none. See [Storage and index](/self-host/storage/).
+`GOBACK_INDEX` is a directory for a SQLite index, or a `postgres://` URL. Leave it out when you back up to a goback server, which keeps its own index. See [Storage and index](/self-host/storage/).
 
 ## Back up
 
@@ -38,7 +38,7 @@ export GOBACK_STORAGE=/backups/store GOBACK_INDEX=/backups/index
 goback --store-key store.key --set home commit new ~/
 ```
 
-A set is a series of snapshots of one thing. The first commit uploads everything; the next only what changed.
+`home` is the set: a series of snapshots of one thing, here your home directory. The first commit uploads everything. Later commits upload only what changed.
 
 ## List
 
