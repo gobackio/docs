@@ -22,6 +22,7 @@ export default defineConfig({
 						'self-host/agent',
 						'self-host/server',
 						'self-host/postgres',
+						'self-host/mysql',
 					],
 				},
 				{
