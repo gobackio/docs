@@ -124,6 +124,7 @@ goback streams WAL from Postgres 14 to 18. Base backups alone work from 9.6 on.
 
 - **Choosing the base.** It picks the newest base backup that ended before `--at` and that the WAL set continues from. Without `--at`, it picks the newest such base backup.
 - **Fetching WAL.** It sets `restore_command` in `postgresql.auto.conf`. Postgres then runs `goback postgres wal-get` to fetch each WAL file it needs. That command uses the global flags you gave `restore`, so they must also work where Postgres runs.
+- **Copying WAL instead.** With `--copy-wal`, it copies the WAL Postgres needs into `pg_wal` (`pg_xlog` before Postgres 10). Postgres then recovers without goback or access to the store.
 - **Without `--wal-set`.** It restores only the newest base backup, and Postgres recovers to the end of that backup. `--at` requires `--wal-set`.
 - **Finishing.** It writes `recovery.signal`. Postgres promotes once recovery reaches `--at`, or the end of the WAL set.
 - **Finding the sets.** It looks the sets up in the index. If the index doesn't have them, as on a new host, it finds them in the bucket.
