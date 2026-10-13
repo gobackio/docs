@@ -26,6 +26,10 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'Go library',
+					items: ['library/go'],
+				},
+				{
 					label: 'Concepts',
 					items: ['concepts/self-contained', 'concepts/security-model'],
 				},
