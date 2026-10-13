@@ -20,4 +20,4 @@ Agents upload objects in archives. Each archive carries its own index of the obj
 
 ## Sealing at rest
 
-With `--at-rest-key`, a local, `gcs://` or `s3://` store seals each archive where it is stored. This is independent of the store key, which encrypts names and contents on the agent before upload. `goback key at-rest --rotate` adds a new primary key. Earlier keys still open what they sealed.
+With `--at-rest-key`, a local, `gcs://` or `s3://` store seals each archive where it is stored. This is independent of the store key. `goback key at-rest --rotate` adds a new primary key. Earlier keys still open what they sealed.

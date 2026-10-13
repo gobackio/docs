@@ -12,7 +12,7 @@ Every object is addressed by a SHA-256 hash derived from its content.
 | **file** | the chunks a file is made of, in order |
 | **chunk** | a piece of content, cut with FastCDC |
 
-FastCDC cuts at boundaries that depend on the content, so an edit changes only the chunks around it. The same chunk is stored once across files, commits and sets. A backup uploads only what the store doesn't already hold, and a restore downloads only what the target doesn't already hold.
+The same chunk is stored once across files, commits and sets. A backup uploads only what the store doesn't already hold, and a restore downloads only what the target doesn't already hold.
 
 ## Archives
 

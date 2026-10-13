@@ -3,8 +3,6 @@ title: Go library
 description: Open a store, back up, restore, schedule, maintain and serve from a Go program.
 ---
 
-goback can also be used as a library.
-
 :::caution
 The API is not stable yet and may change between minor versions.
 :::

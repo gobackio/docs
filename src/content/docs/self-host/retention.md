@@ -30,7 +30,7 @@ If neither the set nor the store has a policy, goback uses a built-in one: the b
 
 ## Maintenance
 
-If you don't run a server, run `goback maintain` from cron, for example every hour:
+Without a server, run `goback maintain` from cron:
 
 ```sh
 0 * * * * goback maintain
@@ -46,4 +46,4 @@ Each run removes the commits that retention or the trash let go, compacts small 
 | `goback repair` | rewrite the archives holding corrupt ones |
 | `goback fix` | rebuild the index from the store |
 
-See [Snapshot lifecycle](/internals/lifecycle/) and [Garbage collection](/internals/garbage-collection/) for details.
+See [Snapshot lifecycle](/internals/lifecycle/) and [Garbage collection](/internals/garbage-collection/).

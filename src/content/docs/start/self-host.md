@@ -15,7 +15,7 @@ go install github.com/gobackio/goback/cmd/goback@latest
 goback key new my-store
 ```
 
-This writes `store.key`. goback encrypts file names and contents with it before they leave the machine. **Keep a copy somewhere else. Without it, your backups can't be restored.** To keep the key in the store under a passphrase instead, see [Keys](/self-host/keys/).
+This writes `store.key`, which encrypts names and contents before they leave the machine. **Without it, your backups can't be restored.** To keep the key in the store under a passphrase instead, see [Keys](/self-host/keys/).
 
 ## Point at a store
 
@@ -38,7 +38,7 @@ export GOBACK_STORAGE=/backups/store GOBACK_INDEX=/backups/index
 goback --store-key store.key --set home commit new ~/
 ```
 
-`home` is the set: a series of snapshots of one thing, here your home directory. The first commit uploads everything. Later commits upload only what changed.
+`home` is the set, a series of snapshots of one directory. Later commits upload only what changed.
 
 ## List
 

@@ -8,7 +8,7 @@ description: Base backups and streamed WAL into two sets, restored to any moment
 `compose.yaml` backs up a Postgres container into a GCS bucket:
 
 - The `agent` service runs [`goback agent run`](/self-host/agent/) with `goback.yaml`. Its one backup, `db`, takes a base backup into the `db/base` set every day at 03:00. On Postgres 15 and later, goback takes it over a replication connection. Older versions need `pg_basebackup`, which the goback image doesn't include.
-- The same agent streams the WAL through a physical replication slot into a local spool, and commits it to the `db/wal` set every minute. It only needs the Postgres port, not the data directory, so the cluster can also run on another host.
+- The same agent streams the WAL through a physical replication slot into a local spool, and commits it to the `db/wal` set every minute. It only needs the Postgres port, not the data directory.
 - Restores run inside the Postgres container, which gets the goback binary from the `goback-bin` volume. A one-shot service copies the static binary into the volume on every `docker compose up`. To upgrade, run `docker compose build` and then `docker compose up -d`.
 
 `goback.yaml`:
@@ -62,7 +62,7 @@ agent:
 
 1. Replace `BUCKET` in `goback.yaml` with your bucket.
 2. Put a service account key with access to the bucket in `gcp-credentials.json`.
-3. Create the store key with `goback key new <store name>` (it writes `store.key`) and move it to `goback.key`. Keep a copy somewhere else. Without it, your backups can't be restored.
+3. Create the store key with `goback key new <store name>` (it writes `store.key`) and move it to `goback.key`. Without it, your backups can't be restored.
 4. Put the Postgres password in `postgres-password`.
 5. Pick a password for the agent's role and put it in `goback.pgpass`:
 
@@ -84,22 +84,22 @@ agent:
      psql -c "SELECT pg_reload_conf()"'
    ```
 
-   Replication needs its own line, because `all` in the database column doesn't match replication connections. The image's existing `host all all all` line covers the agent's normal connection to `postgres`.
+   `all` in the database column doesn't match replication connections. The image's `host all all all` line covers the agent's normal connection to `postgres`.
 8. Run `docker compose up -d`, then check the setup with `docker compose exec agent /root/binary agent check`. It lists anything the cluster is missing: the version, the `REPLICATION` attribute, `max_slot_wal_keep_size`, a free slot and the `pg_hba.conf` lines.
 
 Details:
 
-- **Base backups only.** Point-in-time recovery is optional. With `pitr: false` under `postgres:`, the agent takes only the daily base backups, and each one restores on its own.
+- **Base backups only.** With `pitr: false` under `postgres:`, the agent takes only the daily base backups.
 - **The first base backup.** If `db/base` holds no base backup when the agent starts, the agent takes one right away. Point-in-time recovery reaches back to it.
 - **Point-in-time recovery window.** The agent keeps WAL back to the oldest base backup within `window` (14 days by default). The `db/base` set's retention decides which base backups are kept.
 - **Retention of the two sets.** Each `db/wal` commit holds the whole window, so the set only needs its newest few commits: `goback set retention db/wal --keep-last 60`. A retention by age would keep WAL from long before the window. `db/base` must keep every base backup within the window, or recovery can't reach back as far: `goback set retention db/base --keep-within 360h` covers the window plus a day.
-- **`max_slot_wal_keep_size`.** The slot keeps every WAL file the agent hasn't committed yet, so `pg_wal` grows while the agent or the bucket is down. This setting caps that growth. Past the cap, Postgres drops the slot's WAL. The agent then fills the gap from its spool, or reports it. The agent won't stream without a cap unless you set `allow-uncapped-slot: true`. Set the cap to what the database's disk can spare.
+- **`max_slot_wal_keep_size`.** The slot holds every WAL file the agent hasn't committed yet, so `pg_wal` grows while the agent or the bucket is down. Past the cap, Postgres drops the slot's WAL. The agent then fills the gap from its spool, or reports it. The agent won't stream without a cap unless you set `allow-uncapped-slot: true`. Set the cap to what the database's disk can spare.
 - **The open segment.** Each commit includes the segment Postgres is still writing, so a restore reaches the last commit, not just the last segment switch.
 - **Commits.** The agent commits every minute (`commit-every`), or sooner once 256 MiB of new WAL has arrived (`commit-bytes`). It doesn't commit while the cluster writes nothing. Postgres can remove WAL held by the slot only after a commit holding it is stored.
-- **Stopping.** On SIGTERM, the agent makes a last commit within its shutdown grace period (30 s). The service's `stop_grace_period` is longer, so Docker doesn't kill the agent first.
+- **Stopping.** On SIGTERM, the agent makes a last commit within its shutdown grace period (30 s). The service's `stop_grace_period` must be longer.
 - **Removing the backup.** The slot, `goback_db_wal`, keeps holding WAL after the agent is gone. Drop it with `goback --set db/wal postgres receive --drop-slot`.
 - **Spool.** The `goback-agent` volume holds the WAL waiting to be committed, plus the agent's caches and status. Make it large enough for the WAL written while the bucket is unreachable.
-- **WAL retention during a base backup.** A base backup includes the WAL it needs, so Postgres must keep that WAL until the backup ends. The agent's slot takes care of this. Without the slot, `wal_keep_size` must cover the WAL written while a base backup runs.
+- **WAL retention during a base backup.** The agent's slot holds the WAL a base backup needs. Without the slot, `wal_keep_size` must cover the WAL written while a base backup runs.
 - **Tablespaces.** Clusters with extra tablespaces aren't supported. A base backup only includes the tablespace in the data directory.
 - **Status.** `docker compose exec agent /root/binary agent status` lists each job's last run. The container's health check fails when the agent hangs or a job falls behind.
 
@@ -131,7 +131,7 @@ goback streams WAL from Postgres 14 to 18. Base backups alone work from 9.6 on.
 
 ### Restoring next to a running cluster
 
-To look at an earlier state without touching the live cluster, restore into an empty directory and start a second Postgres on it, on another port:
+Restore into an empty directory and start a second Postgres on it, on another port:
 
 ```sh
 docker compose exec -u postgres postgres sh -c '

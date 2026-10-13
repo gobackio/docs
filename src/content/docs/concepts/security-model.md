@@ -35,7 +35,7 @@ A self-hosted server won't start without TLS unless you tell it that a proxy ter
 | which store key sealed an object (key id) | **visible** |
 | object counts, sizes, upload timing | **visible** |
 
-Sealing is deterministic: the same input under the same key gives the same ciphertext. This lets dedup work under one key. It also means that:
+Sealing is deterministic, which lets dedup work under one key. It also means that:
 
 - the same name in the same directory gives the same token in every snapshot, so an observer can follow one entry across snapshots and see when its size or mtime changes;
 - identical chunks, and identical small files, give identical ciphertext.
@@ -62,7 +62,7 @@ All callers of a self-hosted server present the same secret. Each caller declare
 
 | Party | Can see | Can do |
 | --- | --- | --- |
-| someone who reads the bucket (for example with leaked credentials) | headers, sizes, counts, timing, tenant ids in paths, escrowed key files, KEK-sealed held keys | guess escrow passphrases offline |
+| someone who reads the bucket | headers, sizes, counts, timing, tenant ids in paths, escrowed key files, KEK-sealed held keys | guess escrow passphrases offline |
 | goback (the service and its operators) | everything an org sends that is not sealed under its store key; with key hold, the store key itself | everything the service does, for any org |
 | another org on the same store | not your sets or snapshots. Without a store key on your side: whether a given chunk exists in the store (see Dedup) | — |
 | any of the org's agent API keys | the org's snapshot metadata | — |

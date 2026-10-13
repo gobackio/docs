@@ -54,9 +54,7 @@ backups:
       window: 168h
 ```
 
-This config backs up `/home` every hour. It backs up `/srv` every night at 02:30, with a hook before and after. It takes a Postgres base backup every day at 03:00 and streams the WAL. It dumps a MySQL server every six hours and receives its binary log as it is written.
-
-An unknown key in the file is an error. `agent check` lists all problems at once. Write durations as `30s`, `10m` or `6h`. There is no unit for days, so a week is `168h`.
+An unknown key in the file is an error. `agent check` lists all problems at once. Write durations as `30s`, `10m` or `6h`. There is no unit for days.
 
 ## store
 
@@ -99,7 +97,7 @@ Each entry names one thing to back up and sets exactly one of `path`, `postgres`
 
 Set `every` or `cron`, not both. A path backup needs one of them. A database backup without either runs every day at 03:00. These keys schedule the full backups only. WAL and binlog receivers run all the time.
 
-A backup that has never run, or that missed a run while the agent was down, runs right away. The agent doesn't keep its own record of runs. It takes a backup's last run from the newest complete commit in its set, so a manual `goback commit new` counts too. A failed run is retried after a minute. The wait doubles after each failure, up to an hour, but a retry comes no later than the next planned run.
+A backup that has never run, or that missed a run while the agent was down, runs right away. The agent takes a backup's last run from the newest complete commit in its set, so a manual `goback commit new` counts too. A failed run is retried after a minute. The wait doubles after each failure, up to an hour, but a retry comes no later than the next planned run.
 
 | Kind | Sets |
 | --- | --- |
@@ -181,7 +179,7 @@ It also connects to each database and lists anything missing for the configured 
 
 A running agent writes `status.json` into its state dir at least once a minute. `goback agent status` prints it without contacting the store: each job's state, last start, result, last success, failures in a row and next due time. `--json` prints the file as JSON.
 
-`goback agent status --check` is a health check for systemd, Docker or a monitor. It exits 0 when healthy, 2 when there is no status to read, and 1 when:
+`goback agent status --check` is a health check. It exits 0 when healthy, 2 when there is no status to read, and 1 when:
 
 - the agent stopped, or last wrote its status more than 3 minutes ago;
 - a backup has not succeeded for three of its intervals;
@@ -206,7 +204,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now goback-agent
 ```
 
-- **Credentials.** Postgres passwords go in the `goback` user's `~/.pgpass`, MySQL's in the `defaults-extra-file`. Variables such as `GOOGLE_APPLICATION_CREDENTIALS` or `PGPASSFILE` go in a drop-in: `systemctl edit goback-agent`, then `Environment=…` under `[Service]`.
+- **Credentials.** Postgres passwords go in the `goback` user's `~/.pgpass`, MySQL's in the `defaults-extra-file`. Variables such as `GOOGLE_APPLICATION_CREDENTIALS` or `PGPASSFILE` go in a drop-in (`systemctl edit goback-agent`).
 - **Stopping.** The unit gives the agent 60 seconds after SIGTERM (`TimeoutStopSec`), so keep `shutdown-grace` below that.
 
 ## Docker Compose
