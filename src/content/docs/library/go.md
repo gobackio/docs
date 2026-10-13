@@ -3,7 +3,7 @@ title: Go library
 description: Open a store, back up, restore, schedule, maintain and serve from a Go program.
 ---
 
-Everything the CLI does, a Go program can do with these packages.
+goback can also be used as a library.
 
 :::caution
 The API is not stable yet and may change between minor versions.
@@ -13,13 +13,13 @@ The API is not stable yet and may change between minor versions.
 go get github.com/gobackio/goback@latest
 ```
 
-| Package | Use it to |
+| Package | For |
 | --- | --- |
-| `goback` | open a store from the settings the CLI takes, and serve it |
-| `backup/job` | run each kind of backup once |
-| `backup` | restore commits, subtrees and files |
-| `agent` | run backups on their schedules |
-| `storage/maintenance` | run the housekeeping |
+| `goback` | opening and serving a store |
+| `backup/job` | one backup run |
+| `backup` | restores |
+| `agent` | scheduled backups |
+| `storage/maintenance` | housekeeping |
 
 ## Open a store
 
@@ -36,20 +36,27 @@ if err != nil {
 defer repo.Close()
 ```
 
-`Settings` takes what the [global flags](/reference/cli/) do: `Storage`, `Index`, `AgentID`, `StoreKey`, `Passphrase`, `AtRestKey`, `CacheDir`, `MetadataCacheSize` and `BlobCacheSize`, and a `Logger`. `Storage` is required, and `Index` for a directory or bucket store.
+| `Settings` | |
+| --- | --- |
+| `Storage` | required |
+| `Index` | required for a directory or bucket store |
+| `AgentID`, `StoreKey`, `Passphrase`, `AtRestKey`, `CacheDir`, `MetadataCacheSize`, `BlobCacheSize` | as the [global flags](/reference/cli/) |
+| `Logger` | |
 
-`repo.Key(ctx)` is the store key: read from `StoreKey`, else opened with `Passphrase` from the copy the store keeps escrowed, else nil for a store written in the clear.
+| `repo.Key(ctx)` returns | When |
+| --- | --- |
+| the key in `StoreKey` | `StoreKey` is set |
+| the escrowed key, opened with `Passphrase` | `Passphrase` is set |
+| nil | the store is not encrypted |
 
 ## Back up
-
-`repo.Env` opens what backups share: the store, the index, the key and the caches you ask for under `CacheDir`. Close it before the repo.
 
 ```go
 env, err := repo.Env(ctx, goback.Caches{Stats: true, Objects: true})
 if err != nil {
 	return err
 }
-defer env.Close()
+defer env.Close() // before repo.Close
 
 result, err := job.Path(ctx, env, job.PathSettings{Set: "home", Dir: "/home"})
 if err != nil {
@@ -60,13 +67,18 @@ fmt.Printf("commit %x\n", result.Ref.GetHash())
 job.AfterRun(ctx, env) // compact the store and trim the caches between runs
 ```
 
-| `goback.Caches` | Lets |
+| `goback.Caches` | Effect |
 | --- | --- |
-| `Stats`, `Objects` | a path backup skip unchanged files and trees |
-| `Trees` | a WAL or binlog receiver keep the commits and trees it reads every commit |
-| `Blobs` | restores read what a path backup uploaded without downloading it |
+| `Stats`, `Objects` | path backups skip unchanged files and trees |
+| `Trees` | WAL and binlog receivers keep their commits and trees in memory |
+| `Blobs` | restores read recently uploaded data locally |
 
-`job.PostgresBase` and `job.MySQLDump` take the other full backups. `job.PostgresReceive` and `job.MySQLReceive` stream logs until the channel they are given closes, then make a last commit.
+| Job | Runs |
+| --- | --- |
+| `job.Path` | a path backup |
+| `job.PostgresBase` | a Postgres base backup |
+| `job.MySQLDump` | a MySQL dump |
+| `job.PostgresReceive`, `job.MySQLReceive` | until their channel closes, then commit |
 
 ## Restore
 
@@ -86,17 +98,22 @@ restorer := &backup.Restorer{Store: repo.Store, Key: key}
 err = restorer.RestoreTree(ctx, commit, "/srv/restored", backup.TreeOptions{})
 ```
 
-`PickCommit` with a nil ref picks the set's newest commit at or before a time. `repo.LatestCommit(ctx, set)` finds the newest one by name or numeric set id, from the set heads in the bucket when the index has none.
-
-| `TreeOptions` | Restores |
+| Find a commit | |
 | --- | --- |
-| `From` | only the subtree at this path of the commit |
-| `Paths` | only these files or directories, each at its own path under the directory |
-| `Name` | each entry `Paths` names, or each top entry, under the name it returns |
-| `Delete` | and removes what the commit doesn't hold |
-| `Listed`, `Written`, `Done`, `Removing` | and reports its progress to these callbacks |
+| `backup.PickCommit(ctx, index, set, nil, t)` | the set's newest commit at or before `t` |
+| `repo.LatestCommit(ctx, set)` | the set's newest commit, by name or id, also without an index |
 
-Paths are slash-separated and relative to the directory the set backs up. To restore two entries next to the originals under new names:
+| `TreeOptions` | |
+| --- | --- |
+| `From` | restore only this subtree |
+| `Paths` | restore only these entries |
+| `Name` | rename each restored entry |
+| `Delete` | remove what the commit doesn't hold |
+| `Listed`, `Written`, `Done`, `Removing` | progress callbacks |
+
+Paths are slash-separated, relative to the set's directory.
+
+Two entries next to the originals, renamed:
 
 ```go
 err = restorer.RestoreTree(ctx, commit, "/home", backup.TreeOptions{
@@ -107,26 +124,28 @@ err = restorer.RestoreTree(ctx, commit, "/home", backup.TreeOptions{
 })
 ```
 
-One file, as the set held it at a time, with the directories above the destination made:
+One file, as of a time:
 
 ```go
 node, outcome, err := restorer.RestorePath(ctx, repo.Index, "home", "projects/notes.md", time.Now(), "/tmp/notes.md")
 ```
 
-`restorer.Stats()` counts files written, unchanged and skipped, and the bytes taken from the destination, seeds, cache and store. The `Restorer`'s other fields match the flags of [`commit restore`](/reference/cli/goback-commit/#commit-restore) and [`file restore`](/reference/cli/goback-file/#file-restore): `Seeds`, `Cache` (from `repo.BlobCache`), `Workers`, `Overwrite`, `Verify`, `DryRun`, `Salvage` and `Rechunk`.
+| `Restorer` | |
+| --- | --- |
+| `Seeds`, `Cache`, `Workers`, `Overwrite`, `Verify`, `DryRun`, `Salvage`, `Rechunk` | as the flags of [`commit restore`](/reference/cli/goback-commit/#commit-restore) and [`file restore`](/reference/cli/goback-file/#file-restore); `Cache` from `repo.BlobCache` |
+| `FS` | where files are written; nil is the local disk |
+| `Stats()` | files written, unchanged and skipped; bytes by source |
 
 ### Restoring elsewhere
 
-`Restorer.FS` is the file tree a restore writes, a `backup.WriteFS`; nil is the local disk, `backup.LocalFS`.
+| `FS` implements | Restore |
+| --- | --- |
+| `backup.WriteFS` | writes each file front to back, up to 32 parts ahead |
+| `backup.RandomWriteFS` | reuses existing data, resumes partial files, fetches in parallel |
 
-- **`WriteFS`** writes each file front to back. A restore streams it in order, with up to 32 parts fetched ahead.
-- **`RandomWriteFS`** also opens files to read and write at offsets. A restore then takes parts from the file already there, resumes a partial file and fetches a file's parts in parallel.
-
-A tree that can't hold symlinks, modes or times returns an error matching `errors.ErrUnsupported` from `Symlink`, `Chmod` or `Chtimes`, and the restore goes on without them; `RestoreStats.Unsupported` counts the symlinks left out.
+`Symlink`, `Chmod` or `Chtimes` may return an error matching `errors.ErrUnsupported`; the restore skips them and counts skipped symlinks in `RestoreStats.Unsupported`.
 
 ## Run backups on schedules
-
-`agent.Agent` runs tasks on their plans against one store it opens and keeps open. The tasks of an [agent config file](/self-host/agent/) come from `Config.Tasks`:
 
 ```go
 cfg, err := agent.Load("/etc/goback/goback.yaml")
@@ -155,7 +174,12 @@ a := &agent.Agent{
 return a.Run(ctx, cfg.Tasks()) // until ctx ends
 ```
 
-`a.Reload(tasks)` swaps the tasks of a running agent. A `Task` built by hand sets `Run` with a `Plan` from `agent.Every` or `agent.Cron`, or `Serve` for one that runs all the time.
+| | |
+| --- | --- |
+| `cfg.Tasks()` | the tasks of an [agent config file](/self-host/agent/) |
+| `a.Reload(tasks)` | replace the tasks of a running agent |
+| `Task.Run` | a scheduled task, with a `Plan` from `agent.Every` or `agent.Cron` |
+| `Task.Serve` | a task that runs all the time |
 
 ## Maintenance
 
@@ -167,11 +191,11 @@ ran, err := runner.Due(ctx) // once, as goback maintain does
 go runner.Run(ctx) // on the schedule, until ctx ends
 ```
 
-The runner finds the jobs a store supports from what it implements. `repo.Compact(ctx)` compacts alone.
+`repo.Compact(ctx)` compacts only.
 
 ## Serve a store
 
-`repo.Serve` serves the store to agents over gRPC as [`goback server`](/self-host/server/) does, with health checks, the Admin service and the maintenance jobs of `Schedule`, until ctx ends:
+As [`goback server`](/self-host/server/), until ctx ends:
 
 ```go
 listener, err := net.Listen("tcp", ":6060")
