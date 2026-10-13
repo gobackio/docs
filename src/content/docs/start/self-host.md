@@ -50,3 +50,4 @@ goback --store-key store.key --set home commit list
 
 - [Restore](/start/restore/)
 - [Retention and maintenance](/self-host/retention/): run `goback maintain` from cron.
+- [The agent](/self-host/agent/): run a machine's backups on their schedules from one config file.

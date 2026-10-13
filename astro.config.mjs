@@ -15,7 +15,14 @@ export default defineConfig({
 				},
 				{
 					label: 'Self-host',
-					items: ['self-host/storage', 'self-host/keys', 'self-host/retention', 'self-host/server', 'self-host/postgres'],
+					items: [
+						'self-host/storage',
+						'self-host/keys',
+						'self-host/retention',
+						'self-host/agent',
+						'self-host/server',
+						'self-host/postgres',
+					],
 				},
 				{
 					label: 'Concepts',
