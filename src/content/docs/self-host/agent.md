@@ -104,8 +104,8 @@ A backup that never ran, or missed a run while the agent was down, runs at once.
 | Kind | Sets |
 | --- | --- |
 | `path` | `<name>` |
-| `postgres` | `<name>-base`, and `<name>-wal` with `pitr` |
-| `mysql` | `<name>-dump`, and `<name>-binlog` with `pitr` |
+| `postgres` | `<name>/base`, and `<name>/wal` with `pitr` |
+| `mysql` | `<name>/dump`, and `<name>/binlog` with `pitr` |
 
 A set belongs to one backup.
 
@@ -137,13 +137,13 @@ The settings of [`goback postgres`](/reference/cli/goback-postgres/). The cluste
 | --- | --- | --- |
 | `dbname` | the `PG*` variables | libpq connection string. It must not hold a password: use `.pgpass` or `PGPASSFILE` |
 | `pg-basebackup` | | the `pg_basebackup` to run. Without it, base backups use a replication connection of their own from Postgres 15 on, and the `pg_basebackup` on the `PATH` before |
-| `pitr` | `true` | stream the WAL into `<name>-wal` for point-in-time recovery |
+| `pitr` | `true` | stream the WAL into `<name>/wal` for point-in-time recovery |
 | `window` | `336h` | how far back point-in-time recovery reaches |
 | `commit-every` | `1m` | how often new WAL is committed; at least `10s` |
 | `commit-bytes` | `256MiB` | how much new WAL makes the receiver commit early |
 | `allow-uncapped-slot` | `false` | stream although `max_slot_wal_keep_size` is `-1` |
-| `slot` | from `<name>-wal`: `goback_db_wal` for `db` | the replication slot |
-| `spool` | `<state-dir>/spool/<name>-wal` | where WAL waits for its commit |
+| `slot` | from `<name>/wal`: `goback_db_wal` for `db` | the replication slot |
+| `spool` | `<state-dir>/spool/<name>/wal` | where WAL waits for its commit |
 
 ### mysql
 
@@ -153,12 +153,13 @@ The settings of [`goback mysql`](/reference/cli/goback-mysql/). The server's set
 | --- | --- | --- |
 | `defaults-extra-file` | `~/.my.cnf` alone | MySQL option file read first, for the connection and its password |
 | `mysql`, `mysqldump` | `mysql`, `mysqldump` | the client programs to run; the dump runs on the agent's host |
-| `pitr` | `true` | receive the binary log into `<name>-binlog`. The receiver starts after the first dump |
+| `pitr` | `true` | receive the binary log into `<name>/binlog`. The receiver starts after the first dump |
 | `window` | `336h` | how far back point-in-time recovery reaches |
 | `commit-every` | `1m` | how often new binlog is committed; at least `10s` |
 | `commit-bytes` | `256MiB` | how much new binlog makes the receiver commit early |
-| `server-id` | derived from `<name>-binlog` | the replica server id the receiver connects with |
-| `spool` | `<state-dir>/spool/<name>-binlog` | where binlogs wait for their commit |
+| `server-id` | derived from `<name>/binlog` | the replica server id the receiver connects with |
+| `spool` | `<state-dir>/spool/<name>/binlog` | where binlogs wait for their commit |
+| `no-binlog-position` | `false` | with `pitr: false`, dumps record no binlog position and take no global read lock |
 
 ## Checking
 
@@ -168,10 +169,10 @@ The settings of [`goback mysql`](/reference/cli/goback-mysql/). The server's set
 JOB          KIND              PLAN              LAST RUN  NEXT DUE
 home         path              every 1h0m0s      never     2026-10-13 12:18:56
 srv          path              cron 30 2 * * *   never     2026-10-13 12:18:56
-db-base      postgres-base     cron 0 3 * * *    never     2026-10-13 12:18:56
-db-wal       postgres-receive  always            never     2026-10-13 12:18:56
-shop-dump    mysql-dump        cron 0 */6 * * *  never     2026-10-13 12:18:56
-shop-binlog  mysql-receive     always            never     2026-10-13 12:18:56
+db/base      postgres-base     cron 0 3 * * *    never     2026-10-13 12:18:56
+db/wal       postgres-receive  always            never     2026-10-13 12:18:56
+shop/dump    mysql-dump        cron 0 */6 * * *  never     2026-10-13 12:18:56
+shop/binlog  mysql-receive     always            never     2026-10-13 12:18:56
 ```
 
 It also connects to each database and lists what it lacks for the backup as configured: for Postgres the version, the `REPLICATION` attribute, `max_slot_wal_keep_size`, a free slot and the `pg_hba.conf` lines; for MySQL `log_bin`, `server_id`, the privileges and a free server id. It exits 2 on any problem.
