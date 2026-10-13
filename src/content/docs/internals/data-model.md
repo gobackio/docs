@@ -20,4 +20,4 @@ Objects are packed into archives, and each archive has its own index of what it 
 
 ## Sets
 
-A set is a named series of commits, such as one machine's home directory or one database's WAL. Each set has its own retention, while deduplication works across the whole store. Names group sets; see [Sets](/concepts/sets/).
+A set is a named series of commits, such as one machine's home directory or one database's WAL. Each set has its own retention. Deduplication works across the whole store. Names group sets, as described in [Sets](/concepts/sets/).

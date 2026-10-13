@@ -54,7 +54,7 @@ backups:
       window: 168h
 ```
 
-This config backs up `/home` every hour, and `/srv` every night at 02:30 with a hook before and after. It takes a Postgres base backup every day at 03:00 and streams the WAL. It dumps a MySQL server every six hours and receives its binary log as it is written.
+This config backs up `/home` every hour. It backs up `/srv` every night at 02:30, with a hook before and after. It takes a Postgres base backup every day at 03:00 and streams the WAL. It dumps a MySQL server every six hours and receives its binary log as it is written.
 
 An unknown key in the file is an error. `agent check` lists all problems at once. Write durations as `30s`, `10m` or `6h`. There is no unit for days, so a week is `168h`.
 
@@ -189,7 +189,7 @@ A running agent writes `status.json` into its state dir at least once a minute. 
 
 ## Reloading
 
-On SIGHUP, the agent re-reads the file and applies the `backups` section. A changed backup is rescheduled. A run in progress finishes with its old settings. Changes to `store` and `schedule` take effect only after a restart; the agent logs which changes are waiting. If the new file is invalid, the agent logs the errors and keeps the old one.
+On SIGHUP, the agent re-reads the file and applies the `backups` section. A changed backup is rescheduled. A run in progress finishes with its old settings. Changes to `store` and `schedule` take effect only after a restart. The agent logs which changes are waiting. If the new file is invalid, the agent logs the errors and keeps the old one.
 
 ## systemd
 

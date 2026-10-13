@@ -3,7 +3,7 @@ title: Sets
 description: Named series of snapshots, grouped by their names.
 ---
 
-A set is a named series of commits, such as one machine's home directory, one database's base backups or its WAL. Every commit belongs to one set. Each set has its own retention, while deduplication works across the whole store.
+A set is a named series of commits, such as one machine's home directory, one database's base backups or its WAL. Every commit belongs to one set. Each set has its own retention. Deduplication works across the whole store.
 
 ## Names
 
