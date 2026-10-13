@@ -19,9 +19,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      # the address the site is served at: the github.io one under /docs,
+      # or the custom domain once it is set
+      - id: pages
+        uses: actions/configure-pages@v6
       - uses: withastro/action@v6
         with:
           node-version: 24
+        env:
+          SITE: ${{ steps.pages.outputs.origin }}
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
 
   deploy:
     needs: build

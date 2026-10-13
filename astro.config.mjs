@@ -2,8 +2,15 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
+// SITE and BASE_PATH come from the Pages settings in CI: the github.io
+// address serves the site under /docs until the custom domain is set.
+const site = process.env.SITE || 'https://docs.goback.io';
+const base = process.env.BASE_PATH || undefined;
+
 export default defineConfig({
-	site: 'https://docs.goback.io',	integrations: [
+	site,
+	base,
+	integrations: [
 		starlight({
 			title: 'goback',
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/gobackio/goback' }],
