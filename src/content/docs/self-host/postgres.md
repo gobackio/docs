@@ -56,6 +56,7 @@ Details:
 - **Tablespaces.** Clusters with extra tablespaces aren't supported: a base backup takes the data directory's tablespace only.
 - **`init: true` is required.** The base backup job runs inside the Postgres container. Without an init process, an orphaned child is reparented to the postmaster, and when that child dies the postmaster restarts the cluster.
 - **Ofelia's scope.** Ofelia schedules every labeled container on the Docker host. Give the jobs host-unique names when you back up several clusters.
+- **Checking the cluster.** With the [agent](/self-host/agent/), `goback agent check` lists what the cluster lacks for streaming: the version, the `REPLICATION` attribute, `max_slot_wal_keep_size`, a free slot and the `pg_hba.conf` lines.
 
 ## Database settings
 

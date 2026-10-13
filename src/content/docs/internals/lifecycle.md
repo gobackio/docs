@@ -14,7 +14,7 @@ description: Trash, tombstones, pins, and when a snapshot's data is finally dele
 
 ## Retirement
 
-Retirement runs on every `maintain` (and on a server's schedule). It evaluates each set's policy and writes tombstones for the commits it lets go. Tombstones are stored in the bucket, so a rebuilt index applies them again.
+A set's policy is applied when a commit is indexed and when the policy changes: the commits it lets go are marked retired. Retirement runs on every `maintain` (and on a server's schedule). It tombstones the retired commits and the trashed ones whose window has ended. Tombstones are stored in the bucket, so a rebuilt index applies them again.
 
 ## Pins
 
