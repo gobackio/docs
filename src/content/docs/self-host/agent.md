@@ -89,7 +89,7 @@ Each entry names one thing to back up and sets exactly one of `path`, `postgres`
 
 | Key | Default | |
 | --- | --- | --- |
-| `name` | required | unique; no slashes or surrounding spaces. It names the backup's sets |
+| `name` | required | unique. It names the backup's sets; slashes put them in [groups](/concepts/sets/), as in `srv1/db` |
 | `every` | | run this long after the last run started |
 | `cron` | | five fields, or `@hourly`, `@daily`, `@weekly`, `@monthly`, in the system's time zone |
 | `jitter` | `0` | shift every run by a fixed offset up to this long. The offset stays the same across restarts and differs per agent and backup |

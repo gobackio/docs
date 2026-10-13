@@ -13,6 +13,6 @@ A `/` in a name puts the set in a group. `shop/dump` and `shop/binlog` are both 
 
 A group isn't stored as anything of its own and holds no commits. It exists as long as some set's name starts with it. A set can have the same name as a group: `shop` and `shop/dump` can both exist.
 
-[The agent](/self-host/agent/) puts a database backup's sets in a group named after the backup. A backup named `shop` writes `shop/base` and `shop/wal` for Postgres, or `shop/dump` and `shop/binlog` for MySQL.
+[The agent](/self-host/agent/) puts a database backup's sets in a group named after the backup. A backup named `shop` writes `shop/base` and `shop/wal` for Postgres, or `shop/dump` and `shop/binlog` for MySQL. A backup named `srv1/shop` writes `srv1/shop/base` and `srv1/shop/wal`, in the group `srv1/shop` inside `srv1`.
 
 In goback cloud, an API key bound to a set can also write every set in its group. A key bound to `shop` can write `shop`, `shop/dump` and `shop/binlog`, but not `shop-dump`. The console lists a group's sets together.
