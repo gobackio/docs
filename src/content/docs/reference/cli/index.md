@@ -19,8 +19,8 @@ goback [global flags] <command> [flags] [arguments]
 | --- | --- |
 | [`agent`](./goback-agent/) | run a machine's backups on their schedules from one config file |
 | [`commit`](./goback-commit/) | Back up, list, restore, delete and undelete commits |
-| [`file`](./goback-file/) | Manage files |
-| [`fix`](./goback-fix/) | Detect and fix problems |
+| [`file`](./goback-file/) | List, show and restore single files and their versions |
+| [`fix`](./goback-fix/) | Rebuild the index from the objects the store holds, as on a new machine or after the index is lost |
 | [`gc`](./goback-gc/) | Mark every object reachable from a live commit or pin and rewrite archives whose dead share justifies it |
 | [`index`](./goback-index/) | Index objects the store already holds, without a rebuild |
 | [`key`](./goback-key/) | Manage the store key that encrypts names and contents before upload |
