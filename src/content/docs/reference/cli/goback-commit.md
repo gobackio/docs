@@ -15,7 +15,7 @@ goback [global flags] commit <command>
 
 ## commit new
 
-Create a new commit by diffing the directory against the set's latest commit
+Back up a directory as a new commit; unchanged files are taken from the set's latest commit
 
 ```sh
 goback [global flags] commit new [flags] [directory]
@@ -23,21 +23,21 @@ goback [global flags] commit new [flags] [directory]
 
 | Flag | Description | Environment | Default |
 | --- | --- | --- | --- |
-| `--include value`, `-i value` | back up paths matching this glob even when an --exclude matches them; paths start with / at the directory; repeatable |  |  |
-| `--exclude value`, `-e value` | skip paths matching this glob; paths start with / at the directory; repeatable |  |  |
+| `--include value`, `-i value` | back up paths that match this glob, even if an --exclude matches them; patterns start with / at the directory; repeatable |  |  |
+| `--exclude value`, `-e value` | skip paths that match this glob; patterns start with / at the directory; repeatable |  |  |
 | `--workers value`, `-w value` | how many files to read and upload at once |  | `24` |
-| `--force-hash value` | percent of unchanged files to re-hash locally as a check on the change test |  |  |
-| `--checkpoint-interval value` | write a partial commit this often so an interrupted run keeps its progress; 0 disables |  | `30m0s` |
-| `--scan-workers value` | how many directories to list ahead of the walk; negative lists every directory on the walk itself |  | `4` |
-| `--read-retries value` | how often to re-read a file that changes while it is being read |  | `3` |
-| `--lost-retries value` | how often to walk again when the store lost objects of the run before its commit; 0 fails the run instead |  | `1` |
-| `--progress-interval value` | how often to report what the walk has covered so far; negative disables |  | `15s` |
-| `--meta value` | key=value label recorded in the object; repeatable |  |  |
-| `--pre-hook value` | shell command run before the walk, for example one that pauses the application's writes; see contrib/hooks |  |  |
-| `--post-hook value` | shell command run after the walk on every exit the agent controls: success, failure, Ctrl-C and deadlines |  |  |
-| `--hook-timeout value` | deadline for each hook |  | `5m0s` |
-| `--hook-optional` | back up anyway when the pre hook fails |  |  |
-| `--max-duration value` | cancel the walk after this long, still running the post hook; 0 disables |  |  |
+| `--force-hash value` | percentage of seemingly unchanged files to hash anyway, to check the change detection |  |  |
+| `--checkpoint-interval value` | save a partial commit this often so an interrupted run keeps its progress; 0 disables |  | `30m0s` |
+| `--scan-workers value` | how many directories to list ahead of the walk; a negative value lists each directory when the walk reaches it |  | `4` |
+| `--read-retries value` | how many times to re-read a file that changes while it is being read |  | `3` |
+| `--lost-retries value` | how many times to walk again when the store loses objects of the run before it commits; 0 fails the run instead |  | `1` |
+| `--progress-interval value` | how often to report the walk's progress; negative disables |  | `15s` |
+| `--meta value` | key=value label to store with the commit or pin; repeatable |  |  |
+| `--pre-hook value` | shell command to run before the walk, for example to pause the application's writes; see contrib/hooks |  |  |
+| `--post-hook value` | shell command to run after the walk, whether the walk succeeds, fails, is stopped with Ctrl-C or hits a deadline |  |  |
+| `--hook-timeout value` | time limit for each hook |  | `5m0s` |
+| `--hook-optional` | back up even if the pre-hook fails |  |  |
+| `--max-duration value` | cancel the walk after this long; the post-hook still runs; 0 disables |  |  |
 
 ## commit list
 
@@ -53,7 +53,7 @@ goback [global flags] commit list [flags]
 
 ## commit restore
 
-Restore a commit into a directory in place, downloading only the parts the directory does not already hold
+Restore a commit into a directory in place; parts the directory already has are not downloaded
 
 ```sh
 goback [global flags] commit restore [flags] <directory> [age]
@@ -62,21 +62,21 @@ goback [global flags] commit restore [flags] <directory> [age]
 | Flag | Description | Environment | Default |
 | --- | --- | --- | --- |
 | `--from value` | restore only the subtree at this slash-separated path in the commit |  |  |
-| `--ref value` | restore exactly the commit with this hex ref |  |  |
+| `--ref value` | restore the commit with this hex ref |  |  |
 | `--at value` | restore the newest commit at or before this RFC3339 time |  |  |
-| `--delete` | remove files under the target that the commit does not contain |  |  |
-| `--force` | restore even when a session.lock under the target is held by a running server |  |  |
+| `--delete` | delete files in the target that are not in the commit |  |  |
+| `--force` | restore even if a running server holds a session.lock in the target |  |  |
 | `--progress-interval value` | how often to report the files and bytes restored so far; negative disables |  | `15s` |
-| `--overwrite value` | always: hash every part of an existing file and rewrite what differs; if-changed: trust a size and mtime match |  | `always` |
-| `--verify` | rehash every written file before it replaces the destination |  |  |
+| `--overwrite value` | how to treat an existing file: always hashes every part and rewrites what differs; if-changed skips it when size and mtime match |  | `always` |
+| `--verify` | hash each written file again before it replaces the existing one |  |  |
 | `--dry-run` | report what would change without writing |  |  |
-| `--seed value` | file or directory whose chunks may be used instead of downloading; repeatable |  |  |
-| `--workers value` | files and parts fetched at once |  | `48` |
-| `--salvage` | write what can be read when parts are missing, leaving holes, and report them |  |  |
+| `--seed value` | file or directory to copy matching chunks from instead of downloading them; repeatable |  |  |
+| `--workers value` | how many files and parts to fetch at once |  | `48` |
+| `--salvage` | write the readable parts when parts are missing; leave holes for the rest and report them |  |  |
 
 ## commit delete
 
-Retire a commit into the trash window
+Retire a commit; it can be undeleted until its trash window ends
 
 ```sh
 goback [global flags] commit delete <ref>
@@ -84,7 +84,7 @@ goback [global flags] commit delete <ref>
 
 ## commit undelete
 
-Bring a retired commit back before its window ends
+Bring back a retired commit before its trash window ends
 
 ```sh
 goback [global flags] commit undelete <ref>
@@ -92,7 +92,7 @@ goback [global flags] commit undelete <ref>
 
 ## commit unretire
 
-Bring tombstoned commits back while the store still holds everything they reach
+Bring back tombstoned commits whose objects the store still holds
 
 ```sh
 goback [global flags] commit unretire [flags] [<ref>...]
@@ -100,6 +100,6 @@ goback [global flags] commit unretire [flags] [<ref>...]
 
 | Flag | Description | Environment | Default |
 | --- | --- | --- | --- |
-| `--set value` | unretire the set's tombstoned commits instead of the refs given |  |  |
-| `--since value` | with --set, only the commits tombstoned at or after this RFC 3339 time or date |  |  |
-| `--dry-run` | report what would come back and what is missing, changing nothing |  |  |
+| `--set value` | unretire this set's tombstoned commits instead of the given refs |  |  |
+| `--since value` | with --set, unretire only commits tombstoned at or after this RFC 3339 time or date |  |  |
+| `--dry-run` | report what would come back and what is missing without changing anything |  |  |

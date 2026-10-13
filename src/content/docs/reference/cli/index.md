@@ -17,22 +17,22 @@ goback [global flags] <command> [flags] [arguments]
 
 | Command | Does |
 | --- | --- |
-| [`agent`](./goback-agent/) | run a machine's backups on their schedules from one config file |
+| [`agent`](./goback-agent/) | Run a machine's scheduled backups from one config file |
 | [`commit`](./goback-commit/) | Back up, list, restore, delete and undelete commits |
 | [`file`](./goback-file/) | List, show and restore single files and their versions |
-| [`fix`](./goback-fix/) | Rebuild the index from the objects the store holds, as on a new machine or after the index is lost |
-| [`gc`](./goback-gc/) | Mark every object reachable from a live commit or pin and rewrite archives whose dead share justifies it |
-| [`index`](./goback-index/) | Index objects the store already holds, without a rebuild |
-| [`key`](./goback-key/) | Manage the store key that encrypts names and contents before upload |
-| [`maintain`](./goback-maintain/) | Run the housekeeping that is due, as a store server does on its schedule; run it from cron |
-| [`mysql`](./goback-mysql/) | Back up and restore MySQL 5.5 through 8.4 servers: dumps and the binary log, each in a set of its own |
+| [`fix`](./goback-fix/) | Rebuild the index from the objects in the store, for example on a new machine or after losing the index |
+| [`gc`](./goback-gc/) | Collect garbage: mark the objects that live commits and pins reach, then rewrite the archives that hold enough dead objects |
+| [`index`](./goback-index/) | Add objects the store already holds to the index without a full rebuild |
+| [`key`](./goback-key/) | Manage the store key that encrypts names and contents before upload, and the at-rest key |
+| [`maintain`](./goback-maintain/) | Run the housekeeping that is due, for example from cron |
+| [`mysql`](./goback-mysql/) | Back up and restore MySQL servers |
 | [`object`](./goback-object/) | Read stored objects by ref |
 | [`pin`](./goback-pin/) | Keep commits, trees or files regardless of retention |
-| [`postgres`](./goback-postgres/) | Back up and restore Postgres clusters: base backups from 9.6 on, and from 14 on the WAL streamed through a replication slot, each in a set of its own |
-| [`repair`](./goback-repair/) | Rewrite every archive holding corrupt objects, leaving the corruption behind |
-| [`scrub`](./goback-scrub/) | Rehash every stored object and report corruption; exits non-zero if any object fails |
+| [`postgres`](./goback-postgres/) | Back up and restore Postgres clusters |
+| [`repair`](./goback-repair/) | Rewrite each archive that holds corrupt objects, without the corrupt objects |
+| [`scrub`](./goback-scrub/) | Hash every stored object again and report corruption; exit non-zero if any object fails |
 | [`server`](./goback-server/) | Serve one store to many agents over gRPC |
-| [`set`](./goback-set/) | Delete and undelete sets, and show or change their retention |
+| [`set`](./goback-set/) | Delete or undelete a set, or show and change its retention |
 
 ## Global flags
 
@@ -40,16 +40,16 @@ Global flags go before the command.
 
 | Flag | Description | Environment | Default |
 | --- | --- | --- | --- |
-| `--json` | print results and errors as JSON on stdout, and logs as JSON lines on stderr | `GOBACK_JSON` |  |
-| `--storage value` | where the objects live: a directory, gcs://bucket, s3://bucket?endpoint=…, goback://key@host:port for a store server, or goback+insecure://key@host:port for one on this machine with no TLS in front of it; required | `GOBACK_STORAGE` |  |
-| `--index value` | where a directory or bucket store keeps its index: a directory for SQLite, or a postgres:// url; required unless --storage is a store server | `GOBACK_INDEX` |  |
-| `--set value`, `-s value` | name of the backup set a command works on |  |  |
-| `--agent-id value` | identifier recorded in commits and presented to a goback:// store server; defaults to the hostname |  |  |
-| `--store-key value` | store key file; names and contents are encrypted with it before upload |  |  |
-| `--passphrase value` | without --store-key, open the store key the store keeps escrowed under this passphrase | `GOBACK_PASSPHRASE` |  |
-| `--at-rest-key value` | key file a local, gcs:// or s3:// store seals its archives with, from goback key at-rest; empty stores objects as received |  |  |
-| `--cache-dir value` | per-machine directory for the caches of every store: blobs a restore need not download, the stat and tree caches a backup skips unchanged files with, and a bucket's archive metadata; empty caches nothing | `GOBACK_CACHE_DIR` |  |
-| `--metadata-cache-size value` | size of a bucket's metadata cache under --cache-dir, past which the commits, trees and files least recently used are let go; 0 keeps them all |  | `1GiB` |
-| `--blob-cache-size value` | size the blob cache under --cache-dir is trimmed to after a backup or restore |  | `4GB` |
-| `--blob-cache-on-backup` | also put every uploaded blob into the blob cache, so a rollback to the last backup downloads nothing |  |  |
+| `--json` | print results and errors as JSON on stdout; logs go to stderr as JSON lines | `GOBACK_JSON` |  |
+| `--storage value` | the store: a directory, gcs://bucket, s3://bucket?endpoint=…, goback://key@host:port for a store server, or goback+insecure://key@host:port for a store server without TLS, such as one on this machine; required | `GOBACK_STORAGE` |  |
+| `--index value` | index of a directory or bucket store: a directory for SQLite, or a postgres:// URL; required unless --storage is a store server | `GOBACK_INDEX` |  |
+| `--set value`, `-s value` | backup set to work on |  |  |
+| `--agent-id value` | this machine's id; goback records it in commits and sends it to a goback:// store server; the hostname by default |  |  |
+| `--store-key value` | store key file; goback encrypts names and contents with it before upload |  |  |
+| `--passphrase value` | passphrase of the escrowed store key kept in the store; used when --store-key is not set | `GOBACK_PASSPHRASE` |  |
+| `--at-rest-key value` | key file that seals the archives of a local, gcs:// or s3:// store, made with goback key at-rest; without it, objects are stored as received |  |  |
+| `--cache-dir value` | directory for this machine's caches of all stores; it holds blobs a restore can use instead of downloading, the stat and tree caches that let a backup skip unchanged files, and a bucket's archive metadata; empty turns caching off | `GOBACK_CACHE_DIR` |  |
+| `--metadata-cache-size value` | size limit of a bucket's metadata cache under --cache-dir; above it, the least recently used commits, trees and files are evicted; 0 keeps them all |  | `1GiB` |
+| `--blob-cache-size value` | size to trim the blob cache under --cache-dir to after a backup or restore |  | `4GB` |
+| `--blob-cache-on-backup` | also add uploaded blobs to the blob cache, so a rollback to the last backup can restore from the cache |  |  |
 | `--help`, `-h` | show help |  |  |

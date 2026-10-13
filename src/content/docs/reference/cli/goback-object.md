@@ -23,7 +23,7 @@ goback [global flags] object list
 
 ## object get
 
-Get a single object
+Write an object to a file
 
 ```sh
 goback [global flags] object get <ref> <file>

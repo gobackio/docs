@@ -31,8 +31,7 @@ function synopsis(path, cmd) {
 function section(path, cmd, depth) {
 	const lines = [];
 	if (depth > 0) lines.push(`${'#'.repeat(depth + 1)} ${path.slice(1).join(' ')}`, '');
-	const text = cmd.description || cmd.usage;
-	if (text) lines.push(esc(text), '');
+	for (const text of [cmd.usage, cmd.description]) if (text) lines.push(esc(text), '');
 	if (cmd.aliases?.length) lines.push(`Aliases: ${cmd.aliases.map((a) => '`' + a + '`').join(', ')}`, '');
 	lines.push(synopsis(path, cmd));
 	const table = flagTable(cmd.flags);

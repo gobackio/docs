@@ -15,14 +15,14 @@ goback [global flags] server [flags]
 
 | Flag | Description | Environment | Default |
 | --- | --- | --- | --- |
-| `--address value` | address the server listens on; :6060 serves agents on other hosts |  | `127.0.0.1:6060` |
-| `--secret value` | the secret every agent of this server presents |  |  |
-| `--secret-file value` | file holding the secret, for when a flag would show it |  |  |
-| `--tls-cert value` | PEM certificate chain the server presents; with --tls-key, agents connect over TLS |  |  |
+| `--address value` | address to listen on; use :6060 to serve agents on other hosts |  | `127.0.0.1:6060` |
+| `--secret value` | secret that agents present to this server |  |  |
+| `--secret-file value` | file that holds the secret, to keep it off the command line |  |  |
+| `--tls-cert value` | PEM certificate chain to present; with --tls-key, agents connect over TLS |  |  |
 | `--tls-key value` | PEM private key for --tls-cert |  |  |
-| `--plaintext-behind-proxy` | serve plaintext because a proxy in front of the server terminates TLS; never expose this listener directly |  |  |
-| `--retire-interval value` | how often retired commits past their window are tombstoned; 0 disables the job |  | `1h0m0s` |
-| `--gc-interval value` | how often the store is garbage collected; 0 disables the job |  | `168h0m0s` |
-| `--compact-interval value` | how often small archives are compacted; 0 disables the job |  | `1h0m0s` |
-| `--sweep-interval value` | how often idle archives are finalized and expired sessions ended |  | `30s` |
-| `--presence-interval value` | how often presence filters are built and set sizes measured for new commits; 0 disables the job |  | `30s` |
+| `--plaintext-behind-proxy` | serve plaintext behind a proxy that terminates TLS; do not expose this listener directly |  |  |
+| `--retire-interval value` | how often to tombstone retired commits whose trash window has ended; 0 disables |  | `1h0m0s` |
+| `--gc-interval value` | how often to collect garbage; 0 disables |  | `168h0m0s` |
+| `--compact-interval value` | how often to compact small archives; 0 disables |  | `1h0m0s` |
+| `--sweep-interval value` | how often to finalize idle archives and end expired sessions |  | `30s` |
+| `--presence-interval value` | how often to build presence filters and measure set sizes for new commits; 0 disables |  | `30s` |

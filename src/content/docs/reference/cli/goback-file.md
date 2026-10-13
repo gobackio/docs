@@ -15,7 +15,7 @@ goback [global flags] file <command>
 
 ## file restore
 
-Restore a file in place, downloading only the parts the destination does not already hold
+Restore a file in place; parts the destination already has are not downloaded
 
 ```sh
 goback [global flags] file restore [flags] <path> <destination> [age]
@@ -23,17 +23,17 @@ goback [global flags] file restore [flags] <path> <destination> [age]
 
 | Flag | Description | Environment | Default |
 | --- | --- | --- | --- |
-| `--overwrite value` | always: hash every part of an existing file and rewrite what differs; if-changed: trust a size and mtime match |  | `always` |
-| `--verify` | rehash the written file before it replaces the destination |  |  |
+| `--overwrite value` | how to treat an existing file: always hashes every part and rewrites what differs; if-changed skips it when size and mtime match |  | `always` |
+| `--verify` | hash the written file again before it replaces the destination |  |  |
 | `--dry-run` | report what would change without writing |  |  |
-| `--seed value` | file or directory whose chunks may be used instead of downloading; repeatable |  |  |
-| `--workers value` | files and parts fetched at once |  | `48` |
-| `--salvage` | write what can be read when parts are missing, leaving holes, and report them |  |  |
-| `--rechunk` | cut an existing destination with the backup's chunker, so parts that only moved are not downloaded |  |  |
+| `--seed value` | file or directory to copy matching chunks from instead of downloading them; repeatable |  |  |
+| `--workers value` | how many files and parts to fetch at once |  | `48` |
+| `--salvage` | write the readable parts when parts are missing; leave holes for the rest and report them |  |  |
+| `--rechunk` | split the existing destination with the backup's chunker, so parts that only moved are not downloaded |  |  |
 
 ## file show
 
-List a file's newest ten versions, none newer than &lt;age&gt; ago
+List the ten newest versions of a file, or the ten newest that are at least &lt;age&gt; old
 
 ```sh
 goback [global flags] file show <path> [age]
@@ -41,7 +41,7 @@ goback [global flags] file show <path> [age]
 
 ## file ls
 
-List a directory as the set held it, now or &lt;age&gt; ago
+List a directory as it is in the set now, or as it was &lt;age&gt; ago
 
 ```sh
 goback [global flags] file ls <directory> [age]

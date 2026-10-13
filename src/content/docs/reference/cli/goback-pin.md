@@ -15,7 +15,7 @@ goback [global flags] pin <command>
 
 ## pin add
 
-Pin a ref
+Pin a commit, tree or file by its ref
 
 ```sh
 goback [global flags] pin add [flags] <ref>
@@ -23,11 +23,11 @@ goback [global flags] pin add [flags] <ref>
 
 | Flag | Description | Environment | Default |
 | --- | --- | --- | --- |
-| `--meta value` | key=value label recorded in the object; repeatable |  |  |
+| `--meta value` | key=value label to store with the commit or pin; repeatable |  |  |
 
 ## pin list
 
-List the live pins
+List the pins
 
 ```sh
 goback [global flags] pin list
@@ -35,7 +35,7 @@ goback [global flags] pin list
 
 ## pin remove
 
-Tombstone a pin
+Remove a pin
 
 ```sh
 goback [global flags] pin remove <pin-ref>
