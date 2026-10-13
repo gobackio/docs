@@ -16,3 +16,7 @@ npm run build    # static site in dist/, with the Pagefind search index
 goback docs > cli.json
 npm run cli-reference -- cli.json
 ```
+
+## License
+
+Apache License 2.0; see [LICENSE](LICENSE).
