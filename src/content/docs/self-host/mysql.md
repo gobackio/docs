@@ -88,8 +88,8 @@ agent:
 Details:
 
 - **Dumps only.** With `pitr: false` under `mysql:`, the agent takes only the daily dumps. With `log_bin` on, a dump still records its binlog position, so a receiver started later can continue from it.
-- **Point-in-time recovery window.** The agent keeps binlogs back to the oldest dump within `window` (14 days by default). The `db/dump` set's retention decides which dumps are kept.
-- **Retention of the two sets.** Each `db/binlog` commit holds the whole window, so the set only needs its newest few commits: `goback set retention db/binlog --keep-last 60`. A retention by age would keep binlogs from long before the window. `db/dump` must keep every dump within the window, or recovery can't reach back as far: `goback set retention db/dump --keep-within 360h` covers the window plus a day.
+- **Point-in-time recovery window.** Recovery reaches at least `window` back (14 days by default): the agent keeps binlogs from the newest dump taken before the window starts. The `db/dump` set's retention decides which dumps are kept.
+- **Retention of the two sets.** Each `db/binlog` commit holds the whole window, so the set only needs its newest few commits: `goback set retention db/binlog --keep-last 60`. A retention by age would keep binlogs from long before the window. `db/dump` must keep every dump within the window and the one before it, or recovery can't reach back as far: with daily dumps, `goback set retention db/dump --keep-within 360h` covers the window plus a day.
 - **Non-transactional tables.** A dump reads everything in one transaction. If user tables use another engine, such as MyISAM, the dump locks all tables until it finishes and logs which tables caused the lock.
 - **The open binlog.** Each commit includes the binlog the server is still writing, so a restore reaches the last commit, not just the last rotation.
 - **Commits.** The agent commits every minute (`commit-every`), or sooner once 256 MiB of new binlog has arrived (`commit-bytes`). It doesn't commit while the server writes nothing.

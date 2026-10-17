@@ -36,8 +36,10 @@ goback [global flags] mysql receive [flags]
 | `--server-id value` | server id to connect with as a replica; derived from the set's name by default |  |  |
 | `--commit-every value` | how often to commit new binlog; at least 10s |  | `1m0s` |
 | `--commit-bytes value` | commit early once this much new binlog has arrived |  | `256MiB` |
-| `--window value` | how far back point-in-time recovery reaches; binlogs older than the oldest dump in this window are retired |  | `336h0m0s` |
+| `--window value` | how far back point-in-time recovery reaches at least; binlogs older than the newest dump before it are retired |  | `336h0m0s` |
+| `--until-caught-up` | commit the binlog the server has written when receive starts, then exit |  |  |
 | `--shutdown-grace value` | how long the last commit may take after SIGTERM |  | `30s` |
+| `--initial-retention value` | retention policy the set starts with if this run creates it, as goback set retention shows one, such as "keep-last=1 keep=daily=60 keep=weekly=4"; a set that exists keeps its own |  |  |
 
 ## mysql dump
 
@@ -54,6 +56,26 @@ goback [global flags] mysql dump [flags]
 | --- | --- | --- | --- |
 | `--binlog-set value` | set that holds the server's binlogs; the dump joins its chain |  |  |
 | `--no-binlog-position` | skip recording the binary log position, even with log_bin on; the dump then needs no global read lock and no RELOAD or REPLICATION CLIENT privilege |  |  |
+| `--initial-retention value` | retention policy the set starts with if this run creates it, as goback set retention shows one, such as "keep-last=1 keep=daily=60 keep=weekly=4"; a set that exists keeps its own |  |  |
+| `--defaults-extra-file value` | MySQL option file with the connection settings and password; the client programs read it before their own option files; without it, they read only ~/.my.cnf | `GOBACK_MYSQL_DEFAULTS_EXTRA_FILE` |  |
+| `--mysql value` | the mysql client to run | `GOBACK_MYSQL` | `mysql` |
+| `--mysqldump value` | the mysqldump program to run | `GOBACK_MYSQLDUMP` | `mysqldump` |
+| `--mysqlbinlog value` | the mysqlbinlog program that restore replays binlogs with; its version must be at least the source server's | `GOBACK_MYSQLBINLOG` | `mysqlbinlog` |
+
+## mysql check
+
+List what the server lacks for dumps and, with --set, for receiving binlogs into that set
+
+check connects as dump and receive do, and exits with status 1 when something is missing.
+
+```sh
+goback [global flags] mysql check [flags]
+```
+
+| Flag | Description | Environment | Default |
+| --- | --- | --- | --- |
+| `--server-id value` | server id receive would connect with as a replica; derived from the set's name by default |  |  |
+| `--no-binlog-position` | check for dumps that skip recording the binary log position |  |  |
 | `--defaults-extra-file value` | MySQL option file with the connection settings and password; the client programs read it before their own option files; without it, they read only ~/.my.cnf | `GOBACK_MYSQL_DEFAULTS_EXTRA_FILE` |  |
 | `--mysql value` | the mysql client to run | `GOBACK_MYSQL` | `mysql` |
 | `--mysqldump value` | the mysqldump program to run | `GOBACK_MYSQLDUMP` | `mysqldump` |

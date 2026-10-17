@@ -32,6 +32,25 @@ goback [global flags] postgres base [flags]
 | --- | --- | --- | --- |
 | `--dbname value` | connection string for the backup | `GOBACK_POSTGRES_DBNAME` |  |
 | `--pg-basebackup value` | pg_basebackup program to take the backup with; its major version must match the server's | `GOBACK_POSTGRES_BASEBACKUP` |  |
+| `--initial-retention value` | retention policy the set starts with if this run creates it, as goback set retention shows one, such as "keep-last=1 keep=daily=60 keep=weekly=4"; a set that exists keeps its own |  |  |
+
+## postgres check
+
+List what the cluster lacks for base backups and, with --set or --slot, for streaming WAL
+
+check connects as base and receive do, and exits with status 1 when something is missing. With
+--set, it checks the slot receive would use for that WAL set.
+
+```sh
+goback [global flags] postgres check [flags]
+```
+
+| Flag | Description | Environment | Default |
+| --- | --- | --- | --- |
+| `--dbname value` | connection string to check | `GOBACK_POSTGRES_DBNAME` |  |
+| `--pg-basebackup value` | pg_basebackup program base would take the backup with | `GOBACK_POSTGRES_BASEBACKUP` |  |
+| `--slot value` | physical replication slot receive would use; goback_ followed by the set's name by default |  |  |
+| `--allow-uncapped-slot` | accept a slot that max_slot_wal_keep_size does not limit |  |  |
 
 ## postgres receive
 
@@ -55,10 +74,12 @@ goback [global flags] postgres receive [flags]
 | `--slot value` | physical replication slot to use; goback_ followed by the set's name by default |  |  |
 | `--commit-every value` | how often to commit new WAL; at least 10s |  | `1m0s` |
 | `--commit-bytes value` | commit early once this much new WAL has arrived |  | `256MiB` |
-| `--window value` | how far back point-in-time recovery reaches; WAL older than the oldest base backup in this window is retired |  | `336h0m0s` |
+| `--window value` | how far back point-in-time recovery reaches at least; WAL older than the newest base backup before it is retired |  | `336h0m0s` |
 | `--allow-uncapped-slot` | stream even when max_slot_wal_keep_size does not limit the slot, so the slot can keep WAL until the database's disk is full |  |  |
 | `--shutdown-grace value` | how long the last commit may take after SIGTERM |  | `30s` |
+| `--until-caught-up` | commit the WAL the server has flushed when receive starts, then exit |  |  |
 | `--drop-slot` | drop the replication slot and exit |  |  |
+| `--initial-retention value` | retention policy the set starts with if this run creates it, as goback set retention shows one, such as "keep-last=1 keep=daily=60 keep=weekly=4"; a set that exists keeps its own |  |  |
 
 ## postgres restore
 
@@ -81,6 +102,7 @@ goback [global flags] postgres restore [flags] <data directory>
 | `--at value` | moment to recover to, in RFC 3339 (2026-10-02T14:30:00Z); the end of the WAL set by default |  |  |
 | `--goback value` | command that restore_command uses to run goback, including the global flags |  |  |
 | `--copy-wal` | copy the WAL recovery reads into the data directory instead of fetching it through restore_command |  |  |
+| `--workers value` | how many files to write at once |  | `48` |
 
 ## postgres wal-get
 

@@ -136,7 +136,7 @@ These are the settings of [`goback postgres`](/reference/cli/goback-postgres/). 
 | `dbname` | the `PG*` environment variables | the connection string, as `key=value` pairs or a `postgres://` URL. It can't hold a password; use `.pgpass` or `PGPASSFILE` |
 | `pg-basebackup` | | the `pg_basebackup` to run. Without it, goback takes base backups over its own replication connection on Postgres 15 and later. Older versions use the `pg_basebackup` on the `PATH` |
 | `pitr` | `true` | stream the WAL into `<name>/wal` for point-in-time recovery |
-| `window` | `336h` | how far back point-in-time recovery reaches |
+| `window` | `336h` | how far back point-in-time recovery reaches at least |
 | `commit-every` | `1m` | how often new WAL is committed; at least `10s` |
 | `commit-bytes` | `256MiB` | how much new WAL makes the receiver commit early |
 | `allow-uncapped-slot` | `false` | stream although `max_slot_wal_keep_size` is `-1` |
@@ -152,7 +152,7 @@ These are the settings of [`goback mysql`](/reference/cli/goback-mysql/). The [M
 | `defaults-extra-file` | only `~/.my.cnf` | a MySQL option file read before the others, with the connection settings and password |
 | `mysql`, `mysqldump` | `mysql`, `mysqldump` | the client programs to run; the dump runs on the agent's host |
 | `pitr` | `true` | receive the binary log into `<name>/binlog`. The receiver starts after the first dump |
-| `window` | `336h` | how far back point-in-time recovery reaches |
+| `window` | `336h` | how far back point-in-time recovery reaches at least |
 | `commit-every` | `1m` | how often new binlog is committed; at least `10s` |
 | `commit-bytes` | `256MiB` | how much new binlog makes the receiver commit early |
 | `server-id` | derived from `<name>/binlog` | the replica server id the receiver connects with |

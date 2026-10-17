@@ -38,6 +38,7 @@ goback [global flags] commit new [flags] [directory]
 | `--hook-timeout value` | time limit for each hook |  | `5m0s` |
 | `--hook-optional` | back up even if the pre-hook fails |  |  |
 | `--max-duration value` | cancel the walk after this long; the post-hook still runs; 0 disables |  |  |
+| `--initial-retention value` | retention policy the set starts with if this run creates it, as goback set retention shows one, such as "keep-last=1 keep=daily=60 keep=weekly=4"; a set that exists keeps its own |  |  |
 
 ## commit list
 
