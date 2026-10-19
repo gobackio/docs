@@ -5,7 +5,7 @@ description: Which snapshots a set keeps, and the housekeeping that frees what i
 
 ## Retention
 
-A retention policy keeps the last commit of each calendar hour, day, week or month. Each `--keep` bracket covers a number of these periods. The brackets run back from now one after the other, newest first:
+A retention policy keeps the last commit of each calendar hour, day, week, month or year. Each `--keep` bracket covers a number of these periods. The brackets run back from now one after the other, newest first:
 
 ```sh
 goback set retention home \
