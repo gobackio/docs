@@ -37,6 +37,7 @@ goback [global flags] commit new [flags] [directory]
 | `--post-hook value` | shell command to run after the walk, whether the walk succeeds, fails, is stopped with Ctrl-C or hits a deadline |  |  |
 | `--hook-timeout value` | time limit for each hook |  | `5m0s` |
 | `--hook-optional` | back up even if the pre-hook fails |  |  |
+| `--vss` | on Windows, read the directory from a shadow copy taken after the pre-hook, which needs an elevated administrator; without one the live files are read |  |  |
 | `--max-duration value` | cancel the walk after this long; the post-hook still runs; 0 disables |  |  |
 | `--initial-retention value` | retention policy the set starts with if this run creates it, as goback set retention shows one, such as "keep-last=1 keep=daily=60 keep=weekly=4"; a set that exists keeps its own |  |  |
 

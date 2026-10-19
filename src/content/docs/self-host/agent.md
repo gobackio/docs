@@ -126,6 +126,7 @@ These are the settings of [`goback commit new`](/reference/cli/goback-commit/#co
 | `pre-hook`, `post-hook` | | shell commands run before the walk, and after it whether it succeeded or not |
 | `hook-timeout` | `5m` | deadline of each hook |
 | `hook-optional` | `false` | back up anyway when the pre hook fails |
+| `vss` | `false` | on Windows, read `dir` from a shadow copy taken after the pre hook, so open files are read as they were at one moment. It needs an elevated administrator; otherwise the live files are read |
 
 ### postgres
 
