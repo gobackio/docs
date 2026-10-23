@@ -1,9 +1,15 @@
 ---
 title: Postgres
 description: Base backups and streamed WAL into two sets, restored to any moment in between.
+sidebar:
+  badge: Beta
 ---
 
 `goback postgres` takes base backups and streams the WAL, each into its own set. It can restore a cluster to any moment the two sets cover. The example below runs it with Docker Compose. The files are in [contrib/postgres](https://github.com/gobackio/goback/tree/master/contrib/postgres).
+
+:::note
+Postgres backups are in beta.
+:::
 
 `compose.yaml` backs up a Postgres container into a GCS bucket:
 

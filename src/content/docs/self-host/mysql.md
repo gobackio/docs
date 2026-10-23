@@ -1,9 +1,15 @@
 ---
 title: MySQL
 description: Dumps and the binary log, received as a replica, in two sets, restored to any second in between.
+sidebar:
+  badge: Beta
 ---
 
 `goback mysql` streams `mysqldump` output into one set. It connects to the server as a replica and receives the binary log into another set. It can restore a server to a dump, or to any second after it that the binary log covers. It supports MySQL 5.5 to 8.4. The example below runs it with Docker Compose. The files are in [contrib/mysql](https://github.com/gobackio/goback/tree/master/contrib/mysql).
+
+:::note
+MySQL backups are in beta.
+:::
 
 `compose.yaml` backs up a MySQL 8.0 container into a GCS bucket:
 
