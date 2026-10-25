@@ -15,6 +15,8 @@ On **Keys**, add an escrowed store key and choose a passphrase. Agents open it w
 goback cloud can't recover the passphrase. Without it, your backups can't be restored.
 :::
 
+Without a store key, goback cloud encrypts your backups only at rest. That protects them in the bucket, but goback can still read them. See the [security model](/concepts/security-model/).
+
 ## Issue an agent key
 
 On **Keys**, issue an agent key. It is shown only once.
