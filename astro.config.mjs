@@ -38,7 +38,7 @@ export default defineConfig({
 				},
 				{
 					label: 'Concepts',
-					items: ['concepts/sets', 'concepts/self-contained', 'concepts/security-model'],
+					items: ['concepts/sets', 'concepts/storage', 'concepts/retention', 'concepts/self-contained', 'concepts/security-model'],
 				},
 				{
 					label: 'CLI reference',
