@@ -110,7 +110,7 @@ Two backups can't write to the same set.
 
 ### path
 
-These are the settings of [`goback commit new`](/reference/cli/goback-commit/#commit-new).
+These keys go under the backup's `path:`, as in the example above. They are the settings of [`goback commit new`](/reference/cli/goback-commit/#commit-new).
 
 | Key | Default | |
 | --- | --- | --- |
@@ -132,7 +132,7 @@ These are the settings of [`goback commit new`](/reference/cli/goback-commit/#co
 
 ### postgres
 
-These are the settings of [`goback postgres`](/reference/cli/goback-postgres/). The [Postgres page](/self-host/postgres/) lists the settings the cluster needs.
+These keys go under the backup's `postgres:`, as in the example above. They are the settings of [`goback postgres`](/reference/cli/goback-postgres/). The [Postgres page](/self-host/postgres/) lists the settings the cluster needs.
 
 | Key | Default | |
 | --- | --- | --- |
@@ -148,7 +148,7 @@ These are the settings of [`goback postgres`](/reference/cli/goback-postgres/). 
 
 ### mysql
 
-These are the settings of [`goback mysql`](/reference/cli/goback-mysql/). The [MySQL page](/self-host/mysql/) lists the settings the server needs.
+These keys go under the backup's `mysql:`, as in the example above. They are the settings of [`goback mysql`](/reference/cli/goback-mysql/). The [MySQL page](/self-host/mysql/) lists the settings the server needs.
 
 | Key | Default | |
 | --- | --- | --- |
