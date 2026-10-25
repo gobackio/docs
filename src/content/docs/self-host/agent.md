@@ -213,3 +213,7 @@ sudo systemctl enable --now goback-agent
 ## Docker Compose
 
 The [Postgres](/self-host/postgres/) and [MySQL](/self-host/mysql/) examples run the agent as a Compose service, with `goback agent status --check` as its health check.
+
+:::caution
+Mount the folder that holds the config, not the file itself: `./goback:/etc/goback:ro`. A file mount stays attached to the file the container started with. Most editors save by writing a new file and renaming it over the old one, so after an edit the container still sees the old version, and a reload changes nothing.
+:::
