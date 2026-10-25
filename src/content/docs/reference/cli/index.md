@@ -25,10 +25,10 @@ goback [global flags] <command> [flags] [arguments]
 | [`index`](./goback-index/) | Add objects the store already holds to the index without a full rebuild |
 | [`key`](./goback-key/) | Manage the store key that encrypts names and contents before upload, and the at-rest key |
 | [`maintain`](./goback-maintain/) | Run the housekeeping that is due, for example from cron |
-| [`mysql`](./goback-mysql/) | Back up and restore MySQL servers |
+| [`mysql`](./goback-mysql/) | Back up and restore MySQL servers (beta) |
 | [`object`](./goback-object/) | Read stored objects by ref |
 | [`pin`](./goback-pin/) | Keep commits, trees or files regardless of retention |
-| [`postgres`](./goback-postgres/) | Back up and restore Postgres clusters |
+| [`postgres`](./goback-postgres/) | Back up and restore Postgres clusters (beta) |
 | [`repair`](./goback-repair/) | Rewrite each archive that holds corrupt objects, without the corrupt objects |
 | [`scrub`](./goback-scrub/) | Hash every stored object again and report corruption; exit non-zero if any object fails |
 | [`server`](./goback-server/) | Serve one store to many agents over gRPC |

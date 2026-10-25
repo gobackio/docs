@@ -16,7 +16,7 @@ With this policy, the set keeps one commit per hour for the last 336 hours, then
 
 `--keep-last <n>` also keeps the newest `n` commits. `--keep-within <duration>` keeps every commit younger than that. Without a set name, `set retention` shows or changes the store's default policy. `--inherit` removes a set's own policy, so the store's default applies again.
 
-If neither the set nor the store has a policy, goback uses a built-in one: the brackets above, plus the newest commit.
+If neither the set nor the store has a policy, the set keeps every commit.
 
 ## What happens to a commit
 
@@ -33,8 +33,10 @@ If neither the set nor the store has a policy, goback uses a built-in one: the b
 Without a server, run `goback maintain` from cron:
 
 ```sh
-0 * * * * goback maintain
+0 * * * * GOBACK_STORAGE=/backups/store GOBACK_INDEX=/backups/index goback maintain
 ```
+
+Cron starts jobs with an almost empty environment, so name the store and index on the line, or in the crontab above it.
 
 Each run removes the commits that retention or the trash let go, compacts small archives and does other housekeeping. When the last garbage collection is older than `--gc-interval`, the run also collects garbage. A [server](/self-host/server/) does all of this on its own schedule.
 

@@ -94,6 +94,7 @@ Each entry names one thing to back up and sets exactly one of `path`, `postgres`
 | `cron` | | five fields, or `@hourly`, `@daily`, `@weekly`, `@monthly`, in the system's time zone |
 | `jitter` | `0` | shift every run by a fixed offset up to this long. The offset stays the same across restarts and differs per agent and backup |
 | `timeout` | none | cancel a run after this long |
+| `retention` | | the policy the path set, or the base or dump set, starts with when the backup's first run creates it, as `goback set retention` shows one: `"keep-last=1 keep=daily=30 keep=monthly"`. A set that exists keeps its own. Without it, a path set starts with none, and a base or dump set keeps one a day for 60 days, then one a week for 4 weeks. WAL and binlog sets start keeping their newest 60 commits |
 
 Set `every` or `cron`, not both. A path backup needs one of them. A database backup without either runs every day at 03:00. These keys schedule the full backups only. WAL and binlog receivers run all the time.
 
@@ -127,6 +128,7 @@ These are the settings of [`goback commit new`](/reference/cli/goback-commit/#co
 | `hook-timeout` | `5m` | deadline of each hook |
 | `hook-optional` | `false` | back up anyway when the pre hook fails |
 | `vss` | `false` | on Windows, read `dir` from a shadow copy taken after the pre hook, so open files are read as they were at one moment. It needs an elevated administrator; otherwise the live files are read |
+| `download-placeholders` | `false` | on Windows, read files OneDrive and other sync clients keep only in the cloud, which downloads them. Otherwise they're recorded without content, and a restore leaves them out |
 
 ### postgres
 

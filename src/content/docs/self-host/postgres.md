@@ -98,12 +98,12 @@ Details:
 - **Base backups only.** With `pitr: false` under `postgres:`, the agent takes only the daily base backups.
 - **The first base backup.** If `db/base` holds no base backup when the agent starts, the agent takes one right away. Point-in-time recovery reaches back to it.
 - **Point-in-time recovery window.** Recovery reaches at least `window` back (14 days by default): the agent keeps WAL from the newest base backup taken before the window starts. The `db/base` set's retention decides which base backups are kept.
-- **Retention of the two sets.** Each `db/wal` commit holds the whole window, so the set only needs its newest few commits: `goback set retention db/wal --keep-last 60`. A retention by age would keep WAL from long before the window. `db/base` must keep every base backup within the window and the one before it, or recovery can't reach back as far: with daily base backups, `goback set retention db/base --keep-within 360h` covers the window plus a day.
+- **Retention of the two sets.** The agent creates `db/base` keeping a base backup a day for 60 days, then one a week for 4 weeks. It creates `db/wal` keeping its newest 60 commits: each commit holds the whole window, so the newest few are enough. `retention:` on the backup, such as `retention: "keep-last=1 keep=daily=30"`, sets the policy `db/base` starts with instead. Both apply only when the agent creates the set; after that, `goback set retention` changes a set's policy. `db/base` must keep every base backup within the window and the one before it, or recovery can't reach back as far. A retention by age on `db/wal` would keep WAL from long before the window.
 - **`max_slot_wal_keep_size`.** The slot holds every WAL file the agent hasn't committed yet, so `pg_wal` grows while the agent or the bucket is down. Past the cap, Postgres drops the slot's WAL. The agent then fills the gap from its spool, or reports it. The agent won't stream without a cap unless you set `allow-uncapped-slot: true`. Set the cap to what the database's disk can spare.
 - **The open segment.** Each commit includes the segment Postgres is still writing, so a restore reaches the last commit, not just the last segment switch.
 - **Commits.** The agent commits every minute (`commit-every`), or sooner once 256 MiB of new WAL has arrived (`commit-bytes`). It doesn't commit while the cluster writes nothing. Postgres can remove WAL held by the slot only after a commit holding it is stored.
 - **Stopping.** On SIGTERM, the agent makes a last commit within its shutdown grace period (30 s). The service's `stop_grace_period` must be longer.
-- **Removing the backup.** The slot, `goback_db_wal`, keeps holding WAL after the agent is gone. Drop it with `goback --set db/wal postgres receive --drop-slot`.
+- **Removing the backup.** The slot, `goback_db_wal`, keeps holding WAL after the agent is gone. Drop it with `goback --set db/wal postgres receive --drop-slot`, with `--dbname` or the `PG*` variables naming the cluster.
 - **Spool.** The `goback-agent` volume holds the WAL waiting to be committed, plus the agent's caches and status. Make it large enough for the WAL written while the bucket is unreachable.
 - **WAL retention during a base backup.** The agent's slot holds the WAL a base backup needs. Without the slot, `wal_keep_size` must cover the WAL written while a base backup runs.
 - **Tablespaces.** Clusters with extra tablespaces aren't supported. A base backup only includes the tablespace in the data directory.
@@ -129,10 +129,10 @@ goback streams WAL from Postgres 14 to 18. Base backups alone work from 9.6 on.
 `goback postgres restore` writes a base backup into an empty data directory. It sets the directory up so that Postgres recovers from the WAL set when it starts:
 
 - **Choosing the base.** It picks the newest base backup that ended before `--at` and that the WAL set continues from. Without `--at`, it picks the newest such base backup.
-- **Fetching WAL.** It sets `restore_command` in `postgresql.auto.conf`. Postgres then runs `goback postgres wal-get` to fetch each WAL file it needs. That command uses the global flags you gave `restore`, so they must also work where Postgres runs.
+- **Fetching WAL.** It sets `restore_command` in `postgresql.auto.conf` (`recovery.conf` before Postgres 12). Postgres then runs `goback postgres wal-get` to fetch each WAL file it needs. That command uses the global flags you gave `restore`, so they must also work where Postgres runs. `--goback` sets another command to run instead.
 - **Copying WAL instead.** With `--copy-wal`, it copies the WAL Postgres needs into `pg_wal` (`pg_xlog` before Postgres 10). Postgres then recovers without goback or access to the store.
 - **Without `--wal-set`.** It restores only the newest base backup, and Postgres recovers to the end of that backup. `--at` requires `--wal-set`.
-- **Finishing.** It writes `recovery.signal`. Postgres promotes once recovery reaches `--at`, or the end of the WAL set.
+- **Finishing.** It writes `recovery.signal` (from Postgres 12 on). Postgres promotes once recovery reaches `--at`, or the end of the WAL set.
 - **Finding the sets.** It looks the sets up in the index. If the index doesn't have them, as on a new host, it finds them in the bucket.
 
 ### Restoring next to a running cluster

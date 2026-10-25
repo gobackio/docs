@@ -38,6 +38,7 @@ goback [global flags] commit new [flags] [directory]
 | `--hook-timeout value` | time limit for each hook |  | `5m0s` |
 | `--hook-optional` | back up even if the pre-hook fails |  |  |
 | `--vss` | on Windows, read the directory from a shadow copy taken after the pre-hook, which needs an elevated administrator; without one the live files are read |  |  |
+| `--download-placeholders` | on Windows, read files OneDrive and other sync clients keep only in the cloud, which downloads them; without it they are recorded without content |  |  |
 | `--max-duration value` | cancel the walk after this long; the post-hook still runs; 0 disables |  |  |
 | `--initial-retention value` | retention policy the set starts with if this run creates it, as goback set retention shows one, such as "keep-last=1 keep=daily=60 keep=weekly=4"; a set that exists keeps its own |  |  |
 
@@ -75,6 +76,8 @@ goback [global flags] commit restore [flags] <directory> [age]
 | `--seed value` | file or directory to copy matching chunks from instead of downloading them; repeatable |  |  |
 | `--workers value` | how many files and parts to fetch at once |  | `48` |
 | `--salvage` | write the readable parts when parts are missing; leave holes for the rest and report them |  |  |
+| `--seed-mode value` | how a --seed directory is read: guess lists it and reads, as each file is restored, the files most likely to hold its parts, by path, name, then extension and size; full reads every file in it up front |  | `guess` |
+| `--owner value` | who owns what is restored, on Unix as root: none leaves it to you; recorded gives each entry the user and group it was backed up with, by name; USER[:GROUP] gives everything to that account |  | `none` |
 
 ## commit delete
 

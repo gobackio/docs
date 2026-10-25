@@ -38,7 +38,7 @@ export GOBACK_STORAGE=/backups/store GOBACK_INDEX=/backups/index
 goback --store-key store.key --set home commit new ~/
 ```
 
-`home` is the set, a series of snapshots of one directory. Later commits upload only what changed.
+`home` is the set, a series of snapshots of one directory. Later commits upload only what changed. Without `--store-key` or a passphrase, the backup is stored unencrypted.
 
 ## List
 

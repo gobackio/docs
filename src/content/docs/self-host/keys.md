@@ -24,10 +24,11 @@ Pass it with `--store-key store.key`. **Without the key, or its escrowed copy an
 To keep the key in the store, encrypt it with a passphrase. goback writes it as an armored [age](https://age-encryption.org) file:
 
 ```sh
-goback --storage gcs://my-bucket key escrow --key store.key --upload
+export GOBACK_PASSPHRASE='…'
+goback key escrow --key store.key --upload
 ```
 
-Agents can then use `--passphrase` (or `GOBACK_PASSPHRASE`) instead of `--store-key`. Without `--upload`, the command prints the escrowed key instead of storing it. You can also open the file with `age -d`.
+`--upload` keeps the escrowed key in the store that `GOBACK_STORAGE` and `GOBACK_INDEX` name. Agents can then use `--passphrase` (or `GOBACK_PASSPHRASE`) instead of `--store-key`. Without `--upload`, the command prints the escrowed key instead of storing it. You can also open the file with `age -d`. The passphrase needs at least 12 characters.
 
 To rebuild a key file from an escrowed copy, run:
 

@@ -30,6 +30,8 @@ goback [global flags] file restore [flags] <path> <destination> [age]
 | `--workers value` | how many files and parts to fetch at once |  | `48` |
 | `--salvage` | write the readable parts when parts are missing; leave holes for the rest and report them |  |  |
 | `--rechunk` | split the existing destination with the backup's chunker, so parts that only moved are not downloaded |  |  |
+| `--seed-mode value` | how a --seed directory is read: guess lists it and reads, as each file is restored, the files most likely to hold its parts, by path, name, then extension and size; full reads every file in it up front |  | `guess` |
+| `--owner value` | who owns what is restored, on Unix as root: none leaves it to you; recorded gives each entry the user and group it was backed up with, by name; USER[:GROUP] gives everything to that account |  | `none` |
 
 ## file show
 
