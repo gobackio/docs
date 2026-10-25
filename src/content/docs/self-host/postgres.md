@@ -58,7 +58,7 @@ agent:
     - ./goback.yaml:/etc/goback/goback.yaml:ro
     - goback-agent:/var/lib/goback
   healthcheck:
-    test: [CMD, /root/binary, agent, status, --check]
+    test: [CMD, /usr/bin/goback, agent, status, --check]
     interval: 1m
     timeout: 10s
     start_period: 2m
@@ -91,7 +91,7 @@ agent:
    ```
 
    `all` in the database column doesn't match replication connections. The image's `host all all all` line covers the agent's normal connection to `postgres`.
-8. Run `docker compose up -d`, then check the setup with `docker compose exec agent /root/binary agent check`. It lists anything the cluster is missing: the version, the `REPLICATION` attribute, `max_slot_wal_keep_size`, a free slot and the `pg_hba.conf` lines.
+8. Run `docker compose up -d`, then check the setup with `docker compose exec agent goback agent check`. It lists anything the cluster is missing: the version, the `REPLICATION` attribute, `max_slot_wal_keep_size`, a free slot and the `pg_hba.conf` lines.
 
 Details:
 
@@ -107,7 +107,7 @@ Details:
 - **Spool.** The `goback-agent` volume holds the WAL waiting to be committed, plus the agent's caches and status. Make it large enough for the WAL written while the bucket is unreachable.
 - **WAL retention during a base backup.** The agent's slot holds the WAL a base backup needs. Without the slot, `wal_keep_size` must cover the WAL written while a base backup runs.
 - **Tablespaces.** Clusters with extra tablespaces aren't supported. A base backup only includes the tablespace in the data directory.
-- **Status.** `docker compose exec agent /root/binary agent status` lists each job's last run. The container's health check fails when the agent hangs or a job falls behind.
+- **Status.** `docker compose exec agent goback agent status` lists each job's last run. The container's health check fails when the agent hangs or a job falls behind.
 
 ## Database settings
 
