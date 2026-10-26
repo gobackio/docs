@@ -30,9 +30,10 @@ goback [global flags] <command> [flags] [arguments]
 | [`pin`](./goback-pin/) | Keep commits, trees or files regardless of retention |
 | [`postgres`](./goback-postgres/) | Back up and restore Postgres clusters (beta) |
 | [`repair`](./goback-repair/) | Rewrite each archive that holds corrupt objects, without the corrupt objects |
+| [`reseal`](./goback-reseal/) | Seal the store's blobs again under refs the server can check, replacing the commits above them and their pins in the store and its index |
 | [`scrub`](./goback-scrub/) | Hash every stored object again and report corruption; exit non-zero if any object fails |
 | [`server`](./goback-server/) | Serve one store to many agents over gRPC |
-| [`set`](./goback-set/) | Delete or undelete a set, or show and change its retention |
+| [`set`](./goback-set/) | List, delete or undelete sets, or show and change a set's retention |
 
 ## Global flags
 
@@ -40,6 +41,7 @@ Global flags go before the command.
 
 | Flag | Description | Environment | Default |
 | --- | --- | --- | --- |
+| `--env-file value` | file of NAME=value lines to set in the environment, for variables not set already | `GOBACK_ENV_FILE` |  |
 | `--json` | print results and errors as JSON on stdout; logs go to stderr as JSON lines | `GOBACK_JSON` |  |
 | `--storage value` | the store: a directory, gcs://bucket, s3://bucket?endpoint=…, goback://key@host:port for a store server, or goback+insecure://key@host:port for a store server without TLS, such as one on this machine; required | `GOBACK_STORAGE` |  |
 | `--index value` | index of a directory or bucket store: a directory for SQLite, or a postgres:// URL; required unless --storage is a store server | `GOBACK_INDEX` |  |
@@ -47,6 +49,7 @@ Global flags go before the command.
 | `--agent-id value` | this machine's id; goback records it in commits and sends it to a goback:// store server; the hostname by default |  |  |
 | `--store-key value` | store key file; goback encrypts names and contents with it before upload |  |  |
 | `--passphrase value` | passphrase of the escrowed store key kept in the store; used when --store-key is not set | `GOBACK_PASSPHRASE` |  |
+| `--passphrase-file value` | file holding the passphrase of the escrowed store key; used when --passphrase is not set | `GOBACK_PASSPHRASE_FILE` |  |
 | `--at-rest-key value` | key file that seals the archives of a local, gcs:// or s3:// store, made with goback key at-rest; without it, objects are stored as received |  |  |
 | `--cache-dir value` | directory for this machine's caches of all stores; it holds blobs a restore can use instead of downloading, the stat and tree caches that let a backup skip unchanged files, and a bucket's archive metadata; empty turns caching off | `GOBACK_CACHE_DIR` |  |
 | `--metadata-cache-size value` | size limit of a bucket's metadata cache under --cache-dir; above it, the least recently used commits, trees and files are evicted; 0 keeps them all |  | `1GiB` |

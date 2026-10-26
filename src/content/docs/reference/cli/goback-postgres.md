@@ -87,9 +87,11 @@ Write a base backup into an empty data directory; with --wal-set, Postgres recov
 
 With --wal-set, restore sets a restore_command that runs goback for each WAL file Postgres asks
 for. It runs this binary with the global flags given here, or the command in --goback. The command
-and its flags go into postgresql.auto.conf, or into recovery.conf before Postgres 12. Settings
-given as environment variables must also be set in Postgres's environment. With --copy-wal, restore
-copies the WAL into pg_wal instead. Postgres then needs neither goback nor the store.
+goes into postgresql.auto.conf, or into recovery.conf before Postgres 12. The flags that have an
+environment variable go into &lt;data directory&gt;.goback.env, mode 0600, which recovery removes when it
+ends. Other settings given as environment variables must also be set in Postgres's environment.
+With --copy-wal, restore copies the WAL into pg_wal instead. Postgres then needs neither goback nor
+the store.
 
 ```sh
 goback [global flags] postgres restore [flags] <data directory>

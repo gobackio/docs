@@ -37,6 +37,7 @@ goback [global flags] key escrow [flags]
 | --- | --- | --- | --- |
 | `--key value` | key file to escrow |  | `store.key` |
 | `--passphrase value` | escrow passphrase | `GOBACK_PASSPHRASE` |  |
+| `--passphrase-file value` | file holding the escrow passphrase; used when --passphrase is not set | `GOBACK_PASSPHRASE_FILE` |  |
 | `--upload` | keep the escrowed key with the --storage store instead of printing it |  |  |
 
 ## key id
@@ -64,6 +65,7 @@ goback [global flags] key recover [flags]
 | `--escrow value` | escrowed key file, as printed by key escrow; - reads standard input |  | `-` |
 | `--out value` | key file to write |  | `store.key` |
 | `--passphrase value` | escrow passphrase | `GOBACK_PASSPHRASE` |  |
+| `--passphrase-file value` | file holding the escrow passphrase; used when --passphrase is not set | `GOBACK_PASSPHRASE_FILE` |  |
 
 ## key at-rest
 

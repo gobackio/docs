@@ -68,7 +68,8 @@ goback [global flags] commit restore [flags] <directory> [age]
 | `--ref value` | restore the commit with this hex ref |  |  |
 | `--at value` | restore the newest commit at or before this RFC3339 time |  |  |
 | `--delete` | delete files in the target that are not in the commit |  |  |
-| `--force` | restore even if a running server holds a session.lock in the target |  |  |
+| `--escape-names` | restore an entry whose name this system cannot hold, such as one with a colon on Windows, under its name with the offending characters percent-escaped and .goback-escaped added; a backup records it by its name again |  |  |
+| `--force` | restore even if a running server holds a session.lock in the target, and allow --delete on the working directory, a filesystem root or an incomplete commit |  |  |
 | `--progress-interval value` | how often to report the files and bytes restored so far; negative disables |  | `15s` |
 | `--overwrite value` | how to treat an existing file: always hashes every part and rewrites what differs; if-changed skips it when size and mtime match |  | `always` |
 | `--verify` | hash each written file again before it replaces the existing one |  |  |
