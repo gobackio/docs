@@ -24,11 +24,13 @@ A self-hosted server won't start without TLS unless you tell it that a proxy ter
 | file and directory names | sealed |
 | owner user and group names | sealed |
 | symlink targets | sealed |
-| file contents (chunks) | sealed, compressed first |
+| extended attribute names and the paths hard links point to | sealed |
+| file contents (chunks) and extended attribute values | sealed, compressed first |
 | small files (≤ 4 KiB, stored inline) | sealed |
-| file size, mode, modification time, type | **visible** |
+| file size, mode, modification time, type, flags | **visible** |
+| numeric uid and gid | **visible** |
 | directory structure and entry counts | **visible** |
-| chunk boundaries (each part's offset and length) | **visible** |
+| chunk boundaries (each part's offset and length), and the holes of sparse files | **visible** |
 | whether a chunk compressed | **visible** |
 | name length (token = name + 16 bytes) | **visible** |
 | snapshot time, set name, agent id (the hostname by default), labels, consistent/partial flags | **visible** |
@@ -52,11 +54,12 @@ The agent's cache under `--cache-dir` holds the objects the agent uploaded and r
 | --- | --- | --- |
 | someone who reads the bucket | without an at-rest key: everything the agent sent (everything, if no store key). With one: headers, sizes, counts, timing. Escrowed key files in either case | guess the escrow passphrase offline |
 | someone who writes to the bucket | as above | delete or corrupt archives; goback doesn't prevent this |
-| any agent, or anyone with the server's shared secret | everything stored that is not sealed under the store key | every API call, including deleting snapshots, requiring encryption through the store policy, fetching escrowed key files |
+| any agent, or anyone with the server's shared secret | everything stored that is not sealed under the store key | back up, read and pin; fetch escrowed key files; escrow the store key while the store keeps no copy; change retention to keep at least as much |
+| anyone with the server's admin key | as above | every API call, including deleting snapshots, shortening retention, requiring encryption through the store policy |
 | whoever runs `goback server` | everything agents send that is not sealed under the store key; the at-rest key | withhold or roll back snapshots |
 | whoever holds the store key | everything | restore anything |
 
-All callers of a self-hosted server present the same secret. Each caller declares its own agent id, and the server doesn't authenticate it.
+All agents of a self-hosted server present the same secret, and admin commands present the [admin key](/self-host/server/#the-admin-key). Each caller declares its own agent id, and the server doesn't authenticate it.
 
 ### goback cloud
 
@@ -108,7 +111,7 @@ The console decrypts names in the browser with a WebAssembly module.
 
 | | |
 | --- | --- |
-| chunk id with a store key | SHA-256 over HMAC-SHA256(key, chunk): different under every key |
+| chunk id with a store key | SHA-256 of the sealed chunk with its key id and compression: different under every key, and checkable by the store. Stores written before v1.96.0 hold chunks named by SHA-256 over HMAC-SHA256(key, chunk) until [resealed](/self-host/reseal/) |
 | chunk id without a store key | SHA-256 of the chunk |
 | scope with a store key | everything written under that key |
 | scope without a store key | the whole store; in goback cloud, every keyless org on the same store |
@@ -130,7 +133,7 @@ This means that:
 | stored-bytes hash (SHA-256, unkeyed) | corruption at rest |
 | `goback scrub` | corruption, broken archive chains; read-only |
 | at-rest AEAD | tampering with sealed records, for the holder of the at-rest key |
-| server recomputes ids of what it receives | an agent sending mislabeled objects |
+| server recomputes ids of what it receives, sealed chunks included | an agent sending mislabeled objects |
 | client re-hashes every snapshot, directory and file object a server returns against the id it asked for | a server substituting or altering metadata |
 
 Not detected:

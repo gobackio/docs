@@ -32,6 +32,8 @@ export GOBACK_STORAGE=/backups/store GOBACK_INDEX=/backups/index
 
 `GOBACK_INDEX` is a directory for a SQLite index, or a `postgres://` URL. Leave it out when you back up to a goback server, which keeps its own index. See [Storage and index](/self-host/storage/).
 
+To keep these settings in a file of `NAME=value` lines, name it with `--env-file` or `GOBACK_ENV_FILE`. Variables already set in the environment win. goback doesn't read a `.env` file from the working directory on its own.
+
 ## Back up
 
 ```sh

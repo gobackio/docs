@@ -26,6 +26,7 @@ export default defineConfig({
 						'self-host/storage',
 						'self-host/keys',
 						'self-host/retention',
+						'self-host/reseal',
 						'self-host/agent',
 						'self-host/server',
 						'self-host/postgres',

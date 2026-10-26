@@ -39,6 +39,7 @@ defer repo.Close()
 | `Storage` | required |
 | `Index` | required for a directory or bucket store |
 | `AgentID`, `StoreKey`, `Passphrase`, `AtRestKey`, `CacheDir`, `MetadataCacheSize`, `BlobCacheSize` | the same settings as the [global flags](/reference/cli/) |
+| `Create` | make a missing store or index directory; without it, opening one fails |
 | `Logger` | where `Open` logs; nil means `slog.Default` |
 
 `repo.Key(ctx)` returns the store key. It loads the key file in `StoreKey`, or opens the escrowed key with `Passphrase`. When neither is set, the store is not encrypted and the key is nil.
@@ -94,7 +95,8 @@ err = restorer.RestoreTree(ctx, commit, "/srv/restored", backup.TreeOptions{})
 | `From` | restore only this subtree |
 | `Paths` | restore only these entries |
 | `Name` | rename each restored entry |
-| `Delete` | remove what the commit doesn't hold |
+| `Delete` | remove what the commit doesn't hold; a commit marked incomplete fails with `backup.ErrIncomplete` unless `DeleteIncomplete` is set |
+| `EscapeNames` | restore an entry whose name the system can't hold under `backup.EscapeName`'s name, rather than leave it out |
 | `Listed`, `Written`, `Done`, `Removing` | progress callbacks |
 
 Paths are slash-separated and relative to the set's directory.
@@ -148,7 +150,7 @@ if err != nil {
 
 a := &agent.Agent{
 	Settings:    settings,
-	Caches:      cfg.Store.Caches(),
+	Caches:      cfg.Store.Caches(cfg.Backups),
 	Concurrency: cfg.Schedule.Concurrency,
 	Grace:       cfg.Schedule.ShutdownGrace,
 	StateDir:    stateDir,
@@ -183,6 +185,7 @@ if err != nil {
 
 return repo.Serve(ctx, listener, goback.ServeOptions{
 	Secret:   secret,
+	AdminKey: adminKey, // deletes, retires, collects; without it the server refuses those calls
 	TLS:      tlsConfig, // or PlaintextBehindProxy: true behind a proxy that terminates TLS
 	Schedule: maintenance.DefaultSchedule,
 })

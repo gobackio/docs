@@ -40,6 +40,8 @@ Cron starts jobs with an almost empty environment, so name the store and index o
 
 Each run removes the commits that retention or the trash let go, compacts small archives and does other housekeeping. When the last garbage collection is older than `--gc-interval`, the run also collects garbage. A [server](/self-host/server/) does all of this on its own schedule.
 
+Only one process maintains a store at a time. `goback gc`, `maintain`, `repair`, `reseal` and `commit unretire` hold a lease in the store while they work. One that finds another process holding it does nothing and says so; with `--json` it reports `busy`. A lease left by a process that stopped is taken over after an hour.
+
 ## Integrity
 
 | Command | Does |
@@ -47,5 +49,6 @@ Each run removes the commits that retention or the trash let go, compacts small 
 | `goback scrub` | rehash every stored object |
 | `goback repair` | rewrite the archives holding corrupt ones |
 | `goback fix` | rebuild the index from the store |
+| `goback reseal` | name chunks sealed before v1.96.0 so the store can check them; see [Resealing a store](/self-host/reseal/) |
 
 See [Snapshot lifecycle](/internals/lifecycle/) and [Garbage collection](/internals/garbage-collection/).

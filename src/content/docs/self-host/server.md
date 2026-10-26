@@ -7,7 +7,8 @@ A goback server lets several agents back up to one store. It keeps the index and
 
 ```sh
 goback --storage gcs://my-bucket --index /var/lib/goback/index \
-  server --address :6060 --secret-file secret --tls-cert cert.pem --tls-key key.pem
+  server --address :6060 --secret-file secret --admin-key-file admin-key \
+  --tls-cert cert.pem --tls-key key.pem
 ```
 
 Agents use the server as their storage:
@@ -30,8 +31,29 @@ Each agent connects with the shared secret and its own `--agent-id`, which defau
 | --- | --- |
 | `--address` | where it listens: `127.0.0.1:6060` by default, `:6060` for agents on other hosts |
 | `--secret`, `--secret-file` | the secret agents present |
+| `--admin-key`, `--admin-key-file`, `GOBACK_ADMIN_KEY` | the key admin commands present |
 | `--tls-cert`, `--tls-key` | serve TLS |
 | `--plaintext-behind-proxy` | serve without TLS behind a proxy that terminates it |
 | `--retire-interval`, `--compact-interval`, `--gc-interval`, … | how often each maintenance step runs |
 
 All flags: [`goback server`](/reference/cli/goback-server/).
+
+Upgrade the server and its agents together. From v1.96.0 on, objects travel between them compressed, in the form the store keeps them, so agents and servers from before and after that release can't back up to each other.
+
+## The admin key
+
+The secret agents present backs up, reads and pins. It can also escrow the store key while the store keeps no copy of it, and change a set's retention to one that keeps at least as much. Everything else takes the admin key: deleting and undeleting commits and sets, unpinning, shortening retention, setting the trash window or the store policy, retiring, collecting, and escrowing another copy of the store key. So one machine's copy of the secret can't destroy another machine's backups.
+
+Admin commands present the admin key in place of the secret:
+
+```sh
+goback --storage goback://<admin key>@backup.example.com:6060 set delete old-laptop
+```
+
+Without `--admin-key`, the server refuses these calls. Run them on the server's machine against the store and its index instead. The server won't start with an admin key that equals the secret.
+
+## Failed keys and health
+
+An address that presents a wrong key ten times is then held to one try every six seconds, and its calls fail before any key is checked. Behind a proxy, with `--plaintext-behind-proxy`, the address is the last `X-Forwarded-For` entry.
+
+The server answers the gRPC health check, `grpc.health.v1.Health`. The service name `liveness` reports whether the process is up. Any other name reports readiness, which fails while the index doesn't answer and once the server starts shutting down.
