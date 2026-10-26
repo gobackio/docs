@@ -7,7 +7,9 @@ A set is a named series of commits, such as one machine's home directory, one da
 
 ## Names
 
-A set name can be any text except a plain number, because numbers refer to sets by id.
+A set name can be any text except a plain number, because numbers refer to sets by id. The agent refuses a config whose backup would write a set named only with digits.
+
+A deleted set keeps its name while it is in the trash, and commits to it are refused. Once it is gone, the next commit under the name starts a new set, which holds nothing of the old one.
 
 A `/` in a name puts the set in a group. `shop/dump` and `shop/binlog` are both in the group `shop`. `eu/shop/dump` is in both `eu/shop` and `eu`.
 
