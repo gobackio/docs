@@ -21,7 +21,7 @@ Every rewrite, whether by a sweep, a compaction or a split, writes archives that
 
 ## Check before deleting
 
-Before it deletes anything, a collection marks again from the archives and roots the store holds by then. If an object it was about to drop is reachable, it deletes nothing and halts. It leaves a `collection.halt` file in the store, naming its generation and the reachable copies. While that file exists, no collection drops anything. Delete it once you know the cause; a Go program calls `PackStorage.Resume`.
+Before it deletes anything, a collection marks again from the archives and roots the store holds by then. If an object it was about to drop is reachable, it deletes nothing and halts. It records the halt in the store, under `pack/.halt/`, with its generation and the reachable copies. While the halt stands, no collection drops anything. Once you know the cause, `goback maintain resume` ends it and says why the collections were halted. With `--json`, it prints `resumed` and `halted`, the reason.
 
 ## Quarantine
 

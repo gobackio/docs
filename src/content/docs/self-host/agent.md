@@ -73,7 +73,7 @@ Each key sets the global flag of the same name. A flag or its environment variab
 | `blob-cache-size` | `--blob-cache-size` | `4GB`; `0` for no bound |
 | `blob-cache-on-backup` | `--blob-cache-on-backup` | `true` |
 
-The agent rejects a `goback://` storage URL in the file that contains the server's secret. Put the secret in a file and name it with `?key-file=`, for example `goback://backup.example.com?key-file=/etc/goback/secret`. See [Storage and index](/self-host/storage/) and [Encryption and keys](/self-host/keys/).
+The agent rejects a `goback://` storage URL in the file that contains the server's secret. Put the secret in a file and name it with `?key-file=`, for example `goback://backup.example.com?key-file=/etc/goback/secret`. The agent reads the file again whenever it changes, so a key you replace in place takes effect without a restart. While the file is briefly missing, it keeps the last key. A secret written into the URL takes a restart to change. See [Storage and index](/self-host/storage/) and [Encryption and keys](/self-host/keys/).
 
 ## schedule
 

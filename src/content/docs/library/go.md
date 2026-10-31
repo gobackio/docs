@@ -179,7 +179,7 @@ A directory or bucket store is a `*pack.PackStorage`, which `wrapped.Innermost(r
 | --- | --- |
 | `Split(ctx, pack.SplitOptions{})` | split old archives, as [`maintain split`](/reference/cli/goback-maintain/#maintain-split) does; `Age` and `Budget` set its limits |
 | `Halted()` | why the store's collections are halted, `""` when they aren't |
-| `Resume()` | let collections drop again after a halt |
+| `Resume()` | let collections drop again after a halt, as [`maintain resume`](/reference/cli/goback-maintain/#maintain-resume) does |
 
 To count the requests a piece of work makes to the bucket, run it under a context that carries a `storage.Tally`:
 

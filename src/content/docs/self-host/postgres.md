@@ -105,6 +105,7 @@ Details:
 - **Stopping.** On SIGTERM, the agent makes a last commit within its shutdown grace period (30 s). The service's `stop_grace_period` must be longer.
 - **Removing the backup.** The slot, `goback_db_wal`, keeps holding WAL after the agent is gone. Drop it with `goback --set db/wal postgres receive --drop-slot`, with `--dbname` or the `PG*` variables naming the cluster.
 - **Spool.** The `goback-agent` volume holds the WAL waiting to be committed, plus the agent's caches and status. Make it large enough for the WAL written while the bucket is unreachable.
+- **Refused key.** When the store refuses the agent's key, the WAL waits in the spool and the slot. With the key in a `?key-file=` file, replace the file and receiving resumes without a restart.
 - **WAL retention during a base backup.** The agent's slot holds the WAL a base backup needs. Without the slot, `wal_keep_size` must cover the WAL written while a base backup runs.
 - **Tablespaces.** Clusters with extra tablespaces aren't supported. A base backup only includes the tablespace in the data directory.
 - **Status.** `docker compose exec agent goback agent status` lists each job's last run. The container's health check fails when the agent hangs or a job falls behind.

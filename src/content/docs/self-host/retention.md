@@ -40,7 +40,7 @@ Cron starts jobs with an almost empty environment, so name the store and index o
 
 Each run removes the commits that retention or the trash let go, compacts small archives, splits old archives and does other housekeeping. When the last garbage collection is older than `--gc-interval`, the run also collects garbage. A [server](/self-host/server/) does all of this on its own schedule. When one job fails, the run still does the others and exits with the error.
 
-A split rewrites archives over a week old that hold file data beside metadata into archives that hold one or the other. It takes the oldest first and rewrites at most 30 GB a run. Garbage collection then skips the archives that hold only file data, so a bucket that moves objects nobody reads to a colder storage class, such as GCS Autoclass or S3 Intelligent-Tiering, can move the file data. A server splits once a day. `goback maintain split --age 72h --budget 100GB` runs one with other limits.
+A split rewrites archives over a week old that hold file data beside metadata into archives that hold one or the other. It takes the oldest first and rewrites at most 30 GB a run. Garbage collection then skips the archives that hold only file data, so a bucket that moves objects nobody reads to a colder storage class, such as GCS Autoclass or S3 Intelligent-Tiering, can move the file data. A `maintain` run prints what its split did, and `--json` reports it as `split`. A server splits once a day. `goback maintain split --age 72h --budget 100GB` runs one with other limits.
 
 A collection checks the Go runtime's memory limit before it marks. With `GOMEMLIMIT` set, a collection that wouldn't fit beside what the process already holds stops with `the memory limit leaves too little room to collect`, and frees nothing. Raise the limit for that run, or leave `GOMEMLIMIT` unset.
 
@@ -55,6 +55,7 @@ Only one process maintains a store at a time. `goback gc`, `maintain`, `repair`,
 | `goback fix` | rebuild the index from the store |
 | `goback maintain check` | list the commits in the store that the index has no row for |
 | `goback maintain drop-orphans` | tombstone the commits `check` lists |
+| `goback maintain resume` | let collections delete again after their [check before deleting](/internals/garbage-collection/#check-before-deleting) halted them |
 | `goback reseal` | name chunks sealed before v1.96.0 so the store can check them; see [Resealing a store](/self-host/reseal/) |
 
 Every collection keeps a commit that the index has no row for, and everything the commit reaches. From v1.108.0 on, a commit or pin that the store takes but the index fails to record is tombstoned. Before that, it stayed in the store. Run `goback maintain drop-orphans` once to see the commits left over from earlier versions, then again with `--apply` to tombstone them. It leaves out commits received in the last 24 hours, which may still be on their way into the index; `--age` changes that window.
