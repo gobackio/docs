@@ -173,6 +173,22 @@ go runner.Run(ctx) // run each job on its schedule until ctx ends
 
 `repo.Compact(ctx)` only compacts the store.
 
+A directory or bucket store is a `*pack.PackStorage`, which `wrapped.Innermost(repo.Store)` returns from under its caches.
+
+| `PackStorage` | |
+| --- | --- |
+| `Split(ctx, pack.SplitOptions{})` | split old archives, as [`maintain split`](/reference/cli/goback-maintain/#maintain-split) does; `Age` and `Budget` set its limits |
+| `Halted()` | why the store's collections are halted, `""` when they aren't |
+| `Resume()` | let collections drop again after a halt |
+
+To count the requests a piece of work makes to the bucket, run it under a context that carries a `storage.Tally`:
+
+```go
+var tally storage.Tally
+err := restorer.RestoreTree(storage.WithTally(ctx, &tally), commit, "/srv/restored", backup.TreeOptions{})
+gets := tally.Of(storage.OpGet) // Requests and Bytes
+```
+
 ## Serve a store
 
 `repo.Serve` serves the store to agents until ctx ends. It also runs the maintenance jobs of its schedule. See [Running a server](/self-host/server/).

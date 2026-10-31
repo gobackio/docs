@@ -22,6 +22,7 @@ goback --storage gcs://my-bucket --index /var/lib/goback/index --store-key store
 ## Running it
 
 - It works on the store and its index directly, as `gc` and `maintain` do. A `goback://` server can't be resealed through its URL; run the command on the server's machine against the store.
+- It works on up to eight sets at once, and on each set's commits in the order they were received.
 - It holds the store's maintenance lease. When another process is maintaining the store, it does nothing and says so.
 - A run that stops part way carries on when you run it again. A run over a store that is already resealed replaces nothing.
 
