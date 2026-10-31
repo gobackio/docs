@@ -48,6 +48,14 @@ goback [global flags] maintain split [flags]
 | `--age value` | split only archives at least this old |  | `168h0m0s` |
 | `--budget value` | split at most this much |  | `30GB` |
 
+## maintain resume
+
+Let collections drop again after a pre-delete check halted them
+
+```sh
+goback [global flags] maintain resume
+```
+
 ## maintain retire
 
 Tombstone the retired commits whose trash window has ended
