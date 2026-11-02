@@ -9,6 +9,8 @@ description: How unreachable objects are found and removed.
 
 A collection takes a snapshot of the store's archives and marks every object reachable from the roots: live commits and pins. Each run is a numbered generation.
 
+From v1.115.0, with `--cache-dir`, a collection on a bucket first reads the commits, trees and files of every archive into the metadata cache. The mark then reads them from the cache. It reads only what the cache lacks from the bucket, taking neighbouring records in one read.
+
 ## Drop rule
 
 An object is dropped only after **two consecutive generations** leave it unmarked. An object younger than a minimum age (24 hours by default) is kept, whatever the mark says.

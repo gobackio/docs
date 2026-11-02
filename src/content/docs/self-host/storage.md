@@ -33,4 +33,6 @@ Only `goback commit new` creates a store or index directory that doesn't exist. 
 | --- | --- |
 | stat and tree caches | a backup skips unchanged files |
 | blob cache | a restore downloads less; trimmed to `--blob-cache-size` (4GB) |
-| archive metadata | opening a bucket store reads less |
+| metadata cache | opening a bucket store, `fix`, garbage collection and retirement read less from the bucket; trimmed to `--metadata-cache-size` (1GiB) |
+
+From v1.115.0, the metadata cache uses a new format. The first run after an upgrade fills it again from the bucket.
