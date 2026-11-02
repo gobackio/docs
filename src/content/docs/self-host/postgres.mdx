@@ -1,0 +1,740 @@
+---
+title: Postgres
+description: Base backups and streamed WAL into two sets, restored to any moment in between.
+sidebar:
+  badge: Beta
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+`goback postgres` takes base backups and streams the WAL, each into its own set. It can restore a cluster to any moment the two sets cover. The example below runs it with Docker Compose. The files are in [contrib/postgres](https://github.com/gobackio/goback/tree/master/contrib/postgres), and this page shows the compose file for each Postgres version.
+
+:::note
+Postgres backups are in beta.
+:::
+
+## Versions
+
+| Postgres | Base backups | WAL streaming | The agent runs from |
+| --- | --- | --- | --- |
+| 9.6–13 | through `pg_basebackup` | no | the `postgres` image of the server's version |
+| 14 | through `pg_basebackup` | yes | the `postgres:14` image |
+| 15–18 | over goback's own replication connection | yes | the `goback` image |
+
+`pg_basebackup` must have the server's major version, and the goback image doesn't include it. Point-in-time recovery needs the WAL, so it needs Postgres 14 or later. The tabs below follow the version you pick.
+
+## Compose file
+
+`compose.yaml` backs up a Postgres container into a GCS bucket:
+
+- The `agent` service runs [`goback agent run`](/self-host/agent/) with `goback/goback.yaml`. Its one backup, `db`, takes a base backup into the `db/base` set every day at 03:00.
+- From Postgres 14 on, the same agent streams the WAL through a physical replication slot into a local spool, and commits it to the `db/wal` set every minute. It only needs the Postgres port, not the data directory.
+- Restores run inside the Postgres container, which gets the goback binary from the `goback-bin` volume. A one-shot service copies the static binary into the volume on every `docker compose up`, and creates the index directories goback needs. To upgrade, run `docker compose build` and then `docker compose up -d`.
+
+`goback/goback.yaml`:
+
+```yaml
+store:
+  storage: gcs://BUCKET
+  index: /var/lib/goback/index
+  store-key: /run/secrets/goback-key
+  agent-id: db
+  cache-dir: /var/lib/goback/cache
+
+backups:
+  - name: db
+    postgres:
+      dbname: host=postgres user=goback dbname=postgres
+```
+
+<Tabs syncKey="postgres">
+<TabItem label="18">
+
+The `postgres:18` image keeps its data in `/var/lib/postgresql/18/docker` and declares `/var/lib/postgresql` as its volume, so `pgdata` mounts there. Everything else is as on 15–17.
+
+```yaml
+name: goback-postgres
+
+services:
+  goback-bin:
+    image: goback
+    build: ../..
+    entrypoint:
+      - sh
+      - -c
+      - cp /usr/bin/goback /opt/goback/goback && mkdir -p /var/lib/goback/index /var/lib/goback-agent/index && chown -R 999:999 /var/lib/goback /var/lib/goback-agent
+    volumes:
+      - goback-bin:/opt/goback
+      - goback:/var/lib/goback
+      - goback-agent:/var/lib/goback-agent
+
+  postgres:
+    image: postgres:18
+    depends_on:
+      goback-bin:
+        condition: service_completed_successfully
+    command:
+      - -c
+      - max_slot_wal_keep_size=10GB
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres-password
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-credentials
+      GOBACK_CACHE_DIR: /var/lib/goback/cache
+    secrets:
+      - goback-key
+      - gcp-credentials
+      - postgres-password
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - goback-bin:/opt/goback:ro
+      - goback:/var/lib/goback
+
+  agent:
+    image: goback
+    depends_on:
+      goback-bin:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_started
+    restart: unless-stopped
+    stop_grace_period: 40s
+    command: [agent, run]
+    environment:
+      GOBACK_CONFIG: /etc/goback/goback.yaml
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-credentials
+      PGPASSFILE: /run/secrets/goback.pgpass
+    secrets:
+      - goback-key
+      - gcp-credentials
+      - goback.pgpass
+    volumes:
+      - ./goback:/etc/goback:ro
+      - goback-agent:/var/lib/goback
+    healthcheck:
+      test: [CMD, /usr/bin/goback, agent, status, --check]
+      interval: 1m
+      timeout: 10s
+      start_period: 2m
+
+secrets:
+  goback-key:
+    file: ./goback.key
+  gcp-credentials:
+    file: ./gcp-credentials.json
+  postgres-password:
+    file: ./postgres-password
+  goback.pgpass:
+    file: ./goback.pgpass
+
+volumes:
+  pgdata:
+  goback-bin:
+  goback:
+  goback-agent:
+```
+
+</TabItem>
+<TabItem label="15–17">
+
+From 15 on, goback takes base backups over its own replication connection, so the agent runs from the goback image. The file is for 17; for 15 or 16, change `postgres:17`.
+
+```yaml
+name: goback-postgres
+
+services:
+  goback-bin:
+    image: goback
+    build: ../..
+    entrypoint:
+      - sh
+      - -c
+      - cp /usr/bin/goback /opt/goback/goback && mkdir -p /var/lib/goback/index /var/lib/goback-agent/index && chown -R 999:999 /var/lib/goback /var/lib/goback-agent
+    volumes:
+      - goback-bin:/opt/goback
+      - goback:/var/lib/goback
+      - goback-agent:/var/lib/goback-agent
+
+  postgres:
+    image: postgres:17
+    depends_on:
+      goback-bin:
+        condition: service_completed_successfully
+    command:
+      - -c
+      - max_slot_wal_keep_size=10GB
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres-password
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-credentials
+      GOBACK_CACHE_DIR: /var/lib/goback/cache
+    secrets:
+      - goback-key
+      - gcp-credentials
+      - postgres-password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - goback-bin:/opt/goback:ro
+      - goback:/var/lib/goback
+
+  agent:
+    image: goback
+    depends_on:
+      goback-bin:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_started
+    restart: unless-stopped
+    stop_grace_period: 40s
+    command: [agent, run]
+    environment:
+      GOBACK_CONFIG: /etc/goback/goback.yaml
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-credentials
+      PGPASSFILE: /run/secrets/goback.pgpass
+    secrets:
+      - goback-key
+      - gcp-credentials
+      - goback.pgpass
+    volumes:
+      - ./goback:/etc/goback:ro
+      - goback-agent:/var/lib/goback
+    healthcheck:
+      test: [CMD, /usr/bin/goback, agent, status, --check]
+      interval: 1m
+      timeout: 10s
+      start_period: 2m
+
+secrets:
+  goback-key:
+    file: ./goback.key
+  gcp-credentials:
+    file: ./gcp-credentials.json
+  postgres-password:
+    file: ./postgres-password
+  goback.pgpass:
+    file: ./goback.pgpass
+
+volumes:
+  pgdata:
+  goback-bin:
+  goback:
+  goback-agent:
+```
+
+</TabItem>
+<TabItem label="14">
+
+14 streams the WAL, and takes base backups through the `pg_basebackup` of the `postgres:14` image. `max_slot_wal_keep_size` caps the WAL the slot holds, as the details under Setup explain.
+
+```yaml
+name: goback-postgres
+
+services:
+  goback-bin:
+    image: goback
+    build: ../..
+    entrypoint:
+      - sh
+      - -c
+      - cp /usr/bin/goback /opt/goback/goback && mkdir -p /var/lib/goback/index /var/lib/goback-agent/index && chown -R 999:999 /var/lib/goback /var/lib/goback-agent
+    volumes:
+      - goback-bin:/opt/goback
+      - goback:/var/lib/goback
+      - goback-agent:/var/lib/goback-agent
+
+  postgres:
+    image: postgres:14
+    depends_on:
+      goback-bin:
+        condition: service_completed_successfully
+    command:
+      - -c
+      - max_slot_wal_keep_size=10GB
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres-password
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-credentials
+      GOBACK_CACHE_DIR: /var/lib/goback/cache
+    secrets:
+      - goback-key
+      - gcp-credentials
+      - postgres-password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - goback-bin:/opt/goback:ro
+      - goback:/var/lib/goback
+
+  agent:
+    image: postgres:14
+    depends_on:
+      goback-bin:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_started
+    restart: unless-stopped
+    stop_grace_period: 40s
+    user: postgres
+    entrypoint: [/opt/goback/goback, agent, run]
+    environment:
+      GOBACK_CONFIG: /etc/goback/goback.yaml
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-credentials
+      PGPASSFILE: /run/secrets/goback.pgpass
+    secrets:
+      - goback-key
+      - gcp-credentials
+      - goback.pgpass
+    volumes:
+      - ./goback:/etc/goback:ro
+      - goback-bin:/opt/goback:ro
+      - goback-agent:/var/lib/goback
+    healthcheck:
+      test: [CMD, /opt/goback/goback, agent, status, --check]
+      interval: 1m
+      timeout: 10s
+      start_period: 2m
+
+secrets:
+  goback-key:
+    file: ./goback.key
+  gcp-credentials:
+    file: ./gcp-credentials.json
+  postgres-password:
+    file: ./postgres-password
+  goback.pgpass:
+    file: ./goback.pgpass
+
+volumes:
+  pgdata:
+  goback-bin:
+  goback:
+  goback-agent:
+```
+
+</TabItem>
+<TabItem label="13">
+
+13 takes base backups only, so add `pitr: false` under `postgres:` in `goback/goback.yaml`. `wal_keep_size`, which replaced `wal_keep_segments` in 13, keeps 1 GB of WAL for the base backup.
+
+```yaml
+name: goback-postgres
+
+services:
+  goback-bin:
+    image: goback
+    build: ../..
+    entrypoint:
+      - sh
+      - -c
+      - cp /usr/bin/goback /opt/goback/goback && mkdir -p /var/lib/goback/index /var/lib/goback-agent/index && chown -R 999:999 /var/lib/goback /var/lib/goback-agent
+    volumes:
+      - goback-bin:/opt/goback
+      - goback:/var/lib/goback
+      - goback-agent:/var/lib/goback-agent
+
+  postgres:
+    image: postgres:13
+    depends_on:
+      goback-bin:
+        condition: service_completed_successfully
+    command:
+      - -c
+      - wal_keep_size=1GB
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres-password
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-credentials
+      GOBACK_CACHE_DIR: /var/lib/goback/cache
+    secrets:
+      - goback-key
+      - gcp-credentials
+      - postgres-password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - goback-bin:/opt/goback:ro
+      - goback:/var/lib/goback
+
+  agent:
+    image: postgres:13
+    depends_on:
+      goback-bin:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_started
+    restart: unless-stopped
+    stop_grace_period: 40s
+    user: postgres
+    entrypoint: [/opt/goback/goback, agent, run]
+    environment:
+      GOBACK_CONFIG: /etc/goback/goback.yaml
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-credentials
+      PGPASSFILE: /run/secrets/goback.pgpass
+    secrets:
+      - goback-key
+      - gcp-credentials
+      - goback.pgpass
+    volumes:
+      - ./goback:/etc/goback:ro
+      - goback-bin:/opt/goback:ro
+      - goback-agent:/var/lib/goback
+    healthcheck:
+      test: [CMD, /opt/goback/goback, agent, status, --check]
+      interval: 1m
+      timeout: 10s
+      start_period: 2m
+
+secrets:
+  goback-key:
+    file: ./goback.key
+  gcp-credentials:
+    file: ./gcp-credentials.json
+  postgres-password:
+    file: ./postgres-password
+  goback.pgpass:
+    file: ./goback.pgpass
+
+volumes:
+  pgdata:
+  goback-bin:
+  goback:
+  goback-agent:
+```
+
+</TabItem>
+<TabItem label="10–12">
+
+10 to 12 take base backups only, so add `pitr: false` under `postgres:` in `goback/goback.yaml`. `wal_keep_segments` keeps 64 segments (1 GB) of WAL for the base backup. The file is for 12; for 10 or 11, change both `postgres:12` images.
+
+```yaml
+name: goback-postgres
+
+services:
+  goback-bin:
+    image: goback
+    build: ../..
+    entrypoint:
+      - sh
+      - -c
+      - cp /usr/bin/goback /opt/goback/goback && mkdir -p /var/lib/goback/index /var/lib/goback-agent/index && chown -R 999:999 /var/lib/goback /var/lib/goback-agent
+    volumes:
+      - goback-bin:/opt/goback
+      - goback:/var/lib/goback
+      - goback-agent:/var/lib/goback-agent
+
+  postgres:
+    image: postgres:12
+    depends_on:
+      goback-bin:
+        condition: service_completed_successfully
+    command:
+      - -c
+      - wal_keep_segments=64
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres-password
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-credentials
+      GOBACK_CACHE_DIR: /var/lib/goback/cache
+    secrets:
+      - goback-key
+      - gcp-credentials
+      - postgres-password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - goback-bin:/opt/goback:ro
+      - goback:/var/lib/goback
+
+  agent:
+    image: postgres:12
+    depends_on:
+      goback-bin:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_started
+    restart: unless-stopped
+    stop_grace_period: 40s
+    user: postgres
+    entrypoint: [/opt/goback/goback, agent, run]
+    environment:
+      GOBACK_CONFIG: /etc/goback/goback.yaml
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-credentials
+      PGPASSFILE: /run/secrets/goback.pgpass
+    secrets:
+      - goback-key
+      - gcp-credentials
+      - goback.pgpass
+    volumes:
+      - ./goback:/etc/goback:ro
+      - goback-bin:/opt/goback:ro
+      - goback-agent:/var/lib/goback
+    healthcheck:
+      test: [CMD, /opt/goback/goback, agent, status, --check]
+      interval: 1m
+      timeout: 10s
+      start_period: 2m
+
+secrets:
+  goback-key:
+    file: ./goback.key
+  gcp-credentials:
+    file: ./gcp-credentials.json
+  postgres-password:
+    file: ./postgres-password
+  goback.pgpass:
+    file: ./goback.pgpass
+
+volumes:
+  pgdata:
+  goback-bin:
+  goback:
+  goback-agent:
+```
+
+</TabItem>
+<TabItem label="9.6">
+
+9.6 takes base backups only, so add `pitr: false` under `postgres:` in `goback/goback.yaml`. 9.6 starts with `wal_level=minimal` and no WAL senders. The file sets `wal_level` and `max_wal_senders`, and `wal_keep_segments` keeps 64 segments (1 GB) of WAL for the base backup.
+
+```yaml
+name: goback-postgres
+
+services:
+  goback-bin:
+    image: goback
+    build: ../..
+    entrypoint:
+      - sh
+      - -c
+      - cp /usr/bin/goback /opt/goback/goback && mkdir -p /var/lib/goback/index /var/lib/goback-agent/index && chown -R 999:999 /var/lib/goback /var/lib/goback-agent
+    volumes:
+      - goback-bin:/opt/goback
+      - goback:/var/lib/goback
+      - goback-agent:/var/lib/goback-agent
+
+  postgres:
+    image: postgres:9.6
+    depends_on:
+      goback-bin:
+        condition: service_completed_successfully
+    command:
+      - -c
+      - wal_level=replica
+      - -c
+      - max_wal_senders=10
+      - -c
+      - wal_keep_segments=64
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres-password
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-credentials
+      GOBACK_CACHE_DIR: /var/lib/goback/cache
+    secrets:
+      - goback-key
+      - gcp-credentials
+      - postgres-password
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - goback-bin:/opt/goback:ro
+      - goback:/var/lib/goback
+
+  agent:
+    image: postgres:9.6
+    depends_on:
+      goback-bin:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_started
+    restart: unless-stopped
+    stop_grace_period: 40s
+    user: postgres
+    entrypoint: [/opt/goback/goback, agent, run]
+    environment:
+      GOBACK_CONFIG: /etc/goback/goback.yaml
+      GOOGLE_APPLICATION_CREDENTIALS: /run/secrets/gcp-credentials
+      PGPASSFILE: /run/secrets/goback.pgpass
+    secrets:
+      - goback-key
+      - gcp-credentials
+      - goback.pgpass
+    volumes:
+      - ./goback:/etc/goback:ro
+      - goback-bin:/opt/goback:ro
+      - goback-agent:/var/lib/goback
+    healthcheck:
+      test: [CMD, /opt/goback/goback, agent, status, --check]
+      interval: 1m
+      timeout: 10s
+      start_period: 2m
+
+secrets:
+  goback-key:
+    file: ./goback.key
+  gcp-credentials:
+    file: ./gcp-credentials.json
+  postgres-password:
+    file: ./postgres-password
+  goback.pgpass:
+    file: ./goback.pgpass
+
+volumes:
+  pgdata:
+  goback-bin:
+  goback:
+  goback-agent:
+```
+
+</TabItem>
+</Tabs>
+
+## Setup
+
+1. Replace `BUCKET` in `goback/goback.yaml` with your bucket.
+2. Put a service account key with access to the bucket in `gcp-credentials.json`.
+3. Create the store key with `goback key new <store name>` (it writes `store.key`) and move it to `goback.key`. Without it, your backups can't be restored.
+4. Put the Postgres password in `postgres-password`.
+5. Pick a password for the agent's role and put it in `goback.pgpass`:
+
+   ```text
+   postgres:5432:*:goback:…
+   ```
+
+   On 14 and older, `pg_basebackup` runs as the image's `postgres` user (uid 999), and libpq ignores a password file that others can read. Give the file to that user with `sudo chown 999 goback.pgpass && chmod 600 goback.pgpass`.
+6. Start the cluster with `docker compose up -d postgres`, and create the role:
+
+   ```sql
+   CREATE ROLE goback LOGIN REPLICATION PASSWORD '…';
+   ```
+
+7. Allow replication connections from the agent's container, and reload the configuration:
+
+   ```sh
+   docker compose exec -u postgres postgres sh -c '
+     echo "host replication goback all scram-sha-256" >> "$PGDATA/pg_hba.conf" &&
+     psql -c "SELECT pg_reload_conf()"'
+   ```
+
+   `all` in the database column doesn't match replication connections. The image's `host all all all` line covers the agent's normal connection to `postgres`. On 13 and older, the image stores passwords as `md5`, so write `md5` in place of `scram-sha-256`.
+8. Run `docker compose up -d`, then check the setup with `docker compose exec agent goback agent check`. On 14 and older, the agent's goback is `/opt/goback/goback`. The check lists anything the cluster is missing: the version, the `REPLICATION` attribute, a `pg_basebackup` of the server's version, `max_slot_wal_keep_size`, a free slot and the `pg_hba.conf` lines.
+
+Details:
+
+- **Base backups only.** With `pitr: false` under `postgres:`, the agent takes only the daily base backups.
+- **The first base backup.** If `db/base` holds no base backup when the agent starts, the agent takes one right away. Point-in-time recovery reaches back to it.
+- **Point-in-time recovery window.** Recovery reaches at least `window` back (14 days by default): the agent keeps WAL from the newest base backup taken before the window starts. The `db/base` set's retention decides which base backups are kept.
+- **Retention of the two sets.** The agent creates `db/base` keeping a base backup a day for 60 days, then one a week for 4 weeks. It creates `db/wal` keeping its newest 60 commits: each commit holds the whole window, so the newest few are enough. `retention:` on the backup, such as `retention: "keep-last=1 keep=daily=30"`, sets the policy `db/base` starts with instead. Both apply only when the agent creates the set; after that, `goback set retention` changes a set's policy. `db/base` must keep every base backup within the window and the one before it, or recovery can't reach back as far. A retention by age on `db/wal` would keep WAL from long before the window.
+- **`max_slot_wal_keep_size`.** The slot holds every WAL file the agent hasn't committed yet, so `pg_wal` grows while the agent or the bucket is down. Past the cap, Postgres drops the slot's WAL. The agent then fills the gap from its spool, or reports it. The agent won't stream without a cap unless you set `allow-uncapped-slot: true`. Set the cap to what the database's disk can spare.
+- **The open segment.** Each commit includes the segment Postgres is still writing, so a restore reaches the last commit, not just the last segment switch.
+- **Commits.** The agent commits every minute (`commit-every`), or sooner once 256 MiB of new WAL has arrived (`commit-bytes`). Both go under `postgres:` in the backup; see [the agent's settings](/self-host/agent/#postgres). While the cluster writes nothing, it still commits on that timer once the server confirms there is no more WAL, so the newest commit's `pg.covered_to` keeps up. Postgres can remove WAL held by the slot only after a commit holding it is stored.
+- **Stopping.** On SIGTERM, the agent makes a last commit within its shutdown grace period (30 s). The service's `stop_grace_period` must be longer.
+- **Removing the backup.** The slot, `goback_db_wal`, keeps holding WAL after the agent is gone. Drop it with `goback --set db/wal postgres receive --drop-slot`, with `--dbname` or the `PG*` variables naming the cluster.
+- **Spool.** The `goback-agent` volume holds the WAL waiting to be committed, plus the agent's caches and status. Make it large enough for the WAL written while the bucket is unreachable.
+- **Refused key.** When the store refuses the agent's key, the WAL waits in the spool and the slot. With the key in a `?key-file=` file, replace the file and receiving resumes without a restart.
+- **WAL retention during a base backup.** The agent's slot holds the WAL a base backup needs. Without the slot, `wal_keep_size` (`wal_keep_segments` before 13) must cover the WAL written while a base backup runs.
+- **Tablespaces.** Clusters with extra tablespaces aren't supported. A base backup only includes the tablespace in the data directory.
+- **Status.** `docker compose exec agent goback agent status` lists each job's last run. The container's health check fails when the agent hangs or a job falls behind.
+
+## Database settings
+
+<Tabs syncKey="postgres">
+<TabItem label="18">
+
+| setting | base backups only | base backups + WAL |
+|---|---|---|
+| `wal_level` | `replica`, the default | `replica`, the default |
+| `max_wal_senders` | one free for the base backup | one free for the WAL stream and one for a base backup. Default 10; restart to change |
+| `max_replication_slots` | — | one free. Default 10; restart to change |
+| `max_slot_wal_keep_size` | — | **set it**, see above. Default `-1`, unlimited |
+| `wal_keep_size` | at least the WAL written during a base backup | not needed: the slot holds the base's WAL |
+| role | `REPLICATION`, for the base backup | `CREATE ROLE goback LOGIN REPLICATION` |
+| `pg_hba.conf` | a `host replication` line for the agent's address | a `host replication` line for the agent's address, and a line for a normal connection to `postgres` |
+| credentials | `.pgpass` or `PGPASSFILE` | the same |
+
+</TabItem>
+<TabItem label="15–17">
+
+| setting | base backups only | base backups + WAL |
+|---|---|---|
+| `wal_level` | `replica`, the default | `replica`, the default |
+| `max_wal_senders` | one free for the base backup | one free for the WAL stream and one for a base backup. Default 10; restart to change |
+| `max_replication_slots` | — | one free. Default 10; restart to change |
+| `max_slot_wal_keep_size` | — | **set it**, see above. Default `-1`, unlimited |
+| `wal_keep_size` | at least the WAL written during a base backup | not needed: the slot holds the base's WAL |
+| role | `REPLICATION`, for the base backup | `CREATE ROLE goback LOGIN REPLICATION` |
+| `pg_hba.conf` | a `host replication` line for the agent's address | a `host replication` line for the agent's address, and a line for a normal connection to `postgres` |
+| credentials | `.pgpass` or `PGPASSFILE` | the same |
+
+</TabItem>
+<TabItem label="14">
+
+| setting | base backups only | base backups + WAL |
+|---|---|---|
+| `wal_level` | `replica`, the default | `replica`, the default |
+| `max_wal_senders` | one free for the base backup | one free for the WAL stream and one for a base backup. Default 10; restart to change |
+| `max_replication_slots` | — | one free. Default 10; restart to change |
+| `max_slot_wal_keep_size` | — | **set it**, see above. Default `-1`, unlimited |
+| `wal_keep_size` | at least the WAL written during a base backup | not needed: the slot holds the base's WAL |
+| role | `REPLICATION`, for the base backup | `CREATE ROLE goback LOGIN REPLICATION` |
+| `pg_hba.conf` | a `host replication` line for the agent's address | a `host replication` line for the agent's address, and a line for a normal connection to `postgres` |
+| credentials | `.pgpass` or `PGPASSFILE`, readable only by the user that runs `pg_basebackup` | the same |
+| `pg_basebackup` | 14 | 14 |
+
+</TabItem>
+<TabItem label="13">
+
+| setting | base backups |
+|---|---|
+| `wal_level` | `replica`, the default |
+| `max_wal_senders` | one free for the base backup. Default 10; restart to change |
+| `wal_keep_size` | at least the WAL written during a base backup |
+| role | `REPLICATION` |
+| `pg_hba.conf` | a `host replication` line for the agent's address, and a line for the normal connection `agent check` makes to `postgres` |
+| credentials | `.pgpass` or `PGPASSFILE`, readable only by the user that runs `pg_basebackup` |
+| `pg_basebackup` | 13 |
+
+</TabItem>
+<TabItem label="10–12">
+
+| setting | base backups |
+|---|---|
+| `wal_level` | `replica`, the default |
+| `max_wal_senders` | one free for the base backup. Default 10; restart to change |
+| `wal_keep_segments` | enough 16 MB segments for the WAL written during a base backup |
+| role | `REPLICATION` |
+| `pg_hba.conf` | a `host replication` line for the agent's address, and a line for the normal connection `agent check` makes to `postgres` |
+| credentials | `.pgpass` or `PGPASSFILE`, readable only by the user that runs `pg_basebackup` |
+| `pg_basebackup` | the server's major version |
+
+</TabItem>
+<TabItem label="9.6">
+
+| setting | base backups |
+|---|---|
+| `wal_level` | `replica`. 9.6 defaults to `minimal`; restart to change |
+| `max_wal_senders` | one free for the base backup. 9.6 defaults to 0; restart to change |
+| `wal_keep_segments` | enough 16 MB segments for the WAL written during a base backup |
+| role | `REPLICATION` |
+| `pg_hba.conf` | a `host replication` line for the agent's address, and a line for the normal connection `agent check` makes to `postgres` |
+| credentials | `.pgpass` or `PGPASSFILE`, readable only by the user that runs `pg_basebackup` |
+| `pg_basebackup` | 9.6 |
+
+</TabItem>
+</Tabs>
+
+## Restore
+
+`goback postgres restore` writes a base backup into an empty data directory. It sets the directory up so that Postgres recovers from the WAL set when it starts:
+
+- **Choosing the base.** It picks the newest base backup that ended before `--at` and that the WAL set continues from. Without `--at`, it picks the newest such base backup. It refuses a base backup when a WAL segment is missing between the base's end and `--at`, or the end of the WAL set, and fails naming the bases it refused rather than recovering short.
+- **How far the WAL reaches.** Each WAL commit records, in its metadata, the stretch its WAL holds with no segment missing: `pg.covered_from` and `pg.covered_to`, as RFC 3339 times of the cluster's transaction commits, or of the server's last confirmation that no more WAL followed. `goback --json --set db/wal commit list` shows them. `--at` reaches up to the newest commit's `pg.covered_to`.
+- **Fetching WAL.** It sets `restore_command` in `postgresql.auto.conf` (`recovery.conf` before Postgres 12). Postgres then runs `goback postgres wal-get` to fetch each WAL file it needs. That command uses the global flags you gave `restore`, so they must also work where Postgres runs. The flags that have an environment variable, such as `--storage`, `--index` and `--passphrase`, go into `<data directory>.goback.env` next to the data directory, with mode 0600, and recovery deletes the file when it ends. `--goback` sets another command to run instead.
+- **When the store can't be reached.** `wal-get` retries a failed fetch for 15 seconds. It then fails in a way that makes Postgres stop recovery, rather than take the failure for the end of the WAL and promote early.
+- **Copying WAL instead.** With `--copy-wal`, it copies the WAL Postgres needs into `pg_wal` (`pg_xlog` before Postgres 10). Postgres then recovers without goback or access to the store.
+- **Without `--wal-set`.** It restores only the newest base backup, and Postgres recovers to the end of that backup. `--at` requires `--wal-set`.
+- **Finishing.** It writes `recovery.signal` (from Postgres 12 on). Postgres promotes once recovery reaches `--at`, or the end of the WAL set.
+- **Finding the sets.** It looks the sets up in the index. If the index doesn't have them, as on a new host, it finds them in the bucket. The index directory must exist; the compose file's `goback-bin` service creates it.
+
+### Restoring next to a running cluster
+
+Restore into an empty directory and start a second Postgres on it, on another port:
+
+```sh
+docker compose exec -u postgres postgres sh -c '
+  /opt/goback/goback --storage "gcs://BUCKET" \
+    --index /var/lib/goback/index --store-key /run/secrets/goback-key \
+    postgres restore --base-set db/base --wal-set db/wal --at 2026-10-02T14:30:00Z /var/lib/goback/restored &&
+  pg_ctl -D /var/lib/goback/restored -o "-p 5433" -l /var/lib/goback/restored.log start'
+```
+
+On 13 and older, leave out `--wal-set` and `--at`: the restore brings back a base backup.
