@@ -52,7 +52,7 @@ Only one process maintains a store at a time. `goback gc`, `maintain`, `repair`,
 | --- | --- |
 | `goback scrub` | rehash every stored object |
 | `goback repair` | rewrite the archives holding corrupt ones |
-| `goback fix` | rebuild the index from the store |
+| `goback fix` | rebuild the index from the store, then [count the objects it lost](/concepts/self-contained/#rebuilding) |
 | `goback maintain check` | list the commits in the store that the index has no row for |
 | `goback maintain drop-orphans` | tombstone the commits `check` lists |
 | `goback maintain resume` | let collections delete again after their [check before deleting](/internals/garbage-collection/#check-before-deleting) halted them |

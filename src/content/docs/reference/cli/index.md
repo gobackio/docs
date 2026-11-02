@@ -20,7 +20,7 @@ goback [global flags] <command> [flags] [arguments]
 | [`agent`](./goback-agent/) | Run a machine's scheduled backups from one config file |
 | [`commit`](./goback-commit/) | Back up, list, restore, delete and undelete commits |
 | [`file`](./goback-file/) | List, show and restore single files and their versions |
-| [`fix`](./goback-fix/) | Rebuild the index from the objects in the store, for example on a new machine or after losing the index |
+| [`fix`](./goback-fix/) | Rebuild the index from the objects in the store, for example on a new machine or after losing the index, then check the store holds what the versions reference |
 | [`gc`](./goback-gc/) | Collect garbage: mark the objects that live commits and pins reach, then rewrite the archives that hold enough dead objects |
 | [`index`](./goback-index/) | Add objects the store already holds to the index without a full rebuild |
 | [`key`](./goback-key/) | Manage the store key that encrypts names and contents before upload, and the at-rest key |
