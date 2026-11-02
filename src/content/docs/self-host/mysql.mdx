@@ -124,7 +124,7 @@ volumes:
 
 The server starts with binary logging off, so the file turns on `log_bin` and sets `server_id`, `binlog_format`, `sync_binlog` and `expire_logs_days`.
 
-The `mysql:5.7` server negotiates TLS only with key exchanges Go doesn't support, so the receiver's TLS handshake fails. Add `ssl-mode = DISABLED` to `mysql-client.cnf`. Without TLS, the receiver still refuses a server that asks for the password in the clear; 5.7's default `mysql_native_password` doesn't.
+The `mysql:5.7` server offers TLS only with DHE or RSA key exchange. From v1.112.0, the receiver connects to it with RSA key exchange. Before, the TLS handshake fails, and `ssl-mode = DISABLED` in `mysql-client.cnf` works around it.
 
 ```yaml
 name: goback-mysql
@@ -297,7 +297,6 @@ volumes:
    password = …
    ```
 
-   On 5.7, add `ssl-mode = DISABLED`. The 5.5 and 5.6 clients reject that line.
 6. Start the server with `docker compose up -d mysql`, and create the user:
 
    ```sql
@@ -353,7 +352,6 @@ Details:
 | `expire_logs_days` | — | long enough to cover goback being down, such as 3 days or more. Nothing holds binlogs back for goback |
 | `sync_binlog` | — | `1`, the default from 5.7.7, so a host crash can't drop transactions goback already received |
 | privileges | `SELECT`, `SHOW VIEW`, `TRIGGER`, `EVENT`, `LOCK TABLES` | the dump's plus `REPLICATION SLAVE` (the binlog dump) and `REPLICATION CLIENT`. `RELOAD` for the dump's position |
-| TLS | — | `ssl-mode = DISABLED` in the option file, see above |
 | network | the MySQL port from wherever the agent runs | the same |
 
 </TabItem>

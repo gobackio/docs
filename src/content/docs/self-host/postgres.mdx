@@ -590,7 +590,7 @@ volumes:
    postgres:5432:*:goback:…
    ```
 
-   On 14 and older, `pg_basebackup` runs as the image's `postgres` user (uid 999), and libpq ignores a password file that others can read. Give the file to that user with `sudo chown 999 goback.pgpass && chmod 600 goback.pgpass`.
+   On 14 and older, `pg_basebackup` runs as the image's `postgres` user (uid 999), and libpq ignores a password file that others can read. Give the file to that user with `sudo chown 999 goback.pgpass && chmod 600 goback.pgpass`. From v1.112.0, `agent check` reports a password file that `pg_basebackup` would ignore.
 6. Start the cluster with `docker compose up -d postgres`, and create the role:
 
    ```sql
