@@ -19,7 +19,9 @@ An object is dropped only after **two consecutive generations** leave it unmarke
 
 An archive is rewritten without its dropped objects when a share of its bytes is dead (30 % by default). An archive that has held dead objects for long enough (14 days by default) is rewritten whatever the share.
 
-Every rewrite, whether by a sweep, a compaction or a split, writes archives that hold either file data or metadata, never both. The mark doesn't read archives that hold only file data. A split rewrites the older archives that still mix the two; see [Maintenance](/self-host/retention/#maintenance).
+Every rewrite, whether by a sweep, a compaction or a split, writes archives that hold either file data or metadata, never both. The mark doesn't read archives that hold only file data. A split rewrites the archives that still mix the two; see [Maintenance](/self-host/retention/#maintenance).
+
+From v1.116.0, every rewrite puts the commits, trees and files it copies into the metadata cache. `goback maintain` compacts and splits before it retires and collects, so retirement and the collection find what the rewrites copied in the cache.
 
 ## Check before deleting
 

@@ -9,7 +9,7 @@ sidebar:
 
 Run the housekeeping that is due, for example from cron
 
-Without a subcommand, maintain sweeps, retires, compacts, splits and builds presence filters. It collects garbage once the last collection is older than --gc-interval. It also rebuilds the database indexes of heavily changed tables in the index. A subcommand runs one of these operations. A store server runs this housekeeping on its own schedule.
+Without a subcommand, maintain sweeps, compacts, splits, retires and builds presence filters. It collects garbage once the last collection is older than --gc-interval. It also rebuilds the database indexes of heavily changed tables in the index. A subcommand runs one of these operations. A store server runs this housekeeping on its own schedule.
 
 ```sh
 goback [global flags] maintain [flags] <command>
@@ -37,7 +37,7 @@ goback [global flags] maintain compact
 
 ## maintain split
 
-Rewrite old archives holding file data beside metadata into archives holding one or the other, oldest first
+Rewrite archives holding file data beside metadata into archives holding one or the other, oldest first
 
 ```sh
 goback [global flags] maintain split [flags]
@@ -45,7 +45,6 @@ goback [global flags] maintain split [flags]
 
 | Flag | Description | Environment | Default |
 | --- | --- | --- | --- |
-| `--age value` | split only archives at least this old |  | `168h0m0s` |
 | `--budget value` | split at most this much |  | `30GB` |
 
 ## maintain resume
