@@ -177,7 +177,7 @@ A directory or bucket store is a `*pack.PackStorage`, which `wrapped.Innermost(r
 
 | `PackStorage` | |
 | --- | --- |
-| `Split(ctx, pack.SplitOptions{})` | split archives, as [`maintain split`](/reference/cli/goback-maintain/#maintain-split) does; `Budget` sets its limit |
+| `Split(ctx, pack.SplitOptions{})` | split archives, as [`maintain split`](/reference/cli/goback-maintain/#maintain-split) does; `Budget` sets its limit, and the report's `Left` and `LeftBytes` count the mixed archives left past it |
 | `Halted()` | why the store's collections are halted, `""` when they aren't |
 | `Resume()` | let collections drop again after a halt, as [`maintain resume`](/reference/cli/goback-maintain/#maintain-resume) does |
 
