@@ -16,7 +16,7 @@ Agents upload objects in archives. Each archive carries its own index of the obj
 
 ## Presence filters
 
-`maintain` builds presence filters from the commits of a set, or of the whole store. Agents receive them and use them to skip asking the store about content it already holds.
+`maintain` builds presence filters from the commits of a set, or of the whole store. Agents receive them and use them to skip asking the store about content it already holds. From v1.118.0, `maintain` builds a set's filter from the filter the set already holds, and reads only the parts of the newest commit that changed.
 
 ## Sealing at rest
 

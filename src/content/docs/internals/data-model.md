@@ -12,7 +12,7 @@ Every object is addressed by a SHA-256 hash derived from its content.
 | **file** | the chunks a file is made of, in order |
 | **chunk** | a piece of content, cut with FastCDC |
 
-The same chunk is stored once across files, commits and sets. A backup uploads only what the store doesn't already hold, and a restore downloads only what the target doesn't already hold.
+The same chunk is stored once across files, commits and sets. A backup uploads only what the store doesn't already hold; Postgres base backups and MySQL dumps do so from v1.119.0, and before uploaded in full. A restore downloads only what the target doesn't already hold.
 
 ## Archives
 
