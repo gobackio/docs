@@ -44,7 +44,7 @@ Upgrade the server and its agents together. From v1.96.0 on, objects travel betw
 
 From v1.121.0, each commit records the goback version that wrote it, in its metadata under `goback.version`. `goback --json --set home commit list` shows it, such as `v1.121.0`. A build that records no release can show `(devel)` or a pseudo-version, and older commits don't have the key. The first run of a set after an upgrade writes a new commit, even if nothing changed.
 
-Don't use v1.120.0. Every other version refuses the commits it writes, with `proto.Commit carries unknown fields`, and `@latest` skips it. If a store holds commits from v1.120.0, back those sets up again to a new store with v1.121.0 or later.
+Don't use v1.120.0. Every other version refuses the commits it writes, with `proto.Commit carries unknown fields`, and `@latest` skips it. If a store holds commits from v1.120.0, back those sets up again to a new store and index with v1.121.0 or later. Keep the old store until the new one has what you need. To restore from it, use a v1.120.0 binary, the only version that reads those commits.
 
 ## The admin key
 
