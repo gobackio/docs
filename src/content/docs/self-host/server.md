@@ -38,7 +38,17 @@ Each agent connects with the shared secret and its own `--agent-id`, which defau
 
 All flags: [`goback server`](/reference/cli/goback-server/).
 
-Upgrade the server and its agents together. From v1.96.0 on, objects travel between them compressed, in the form the store keeps them, so agents and servers from before and after that release can't back up to each other.
+## Upgrading
+
+Upgrade the server first, then its agents. From v1.120.0, each commit records the goback version that wrote it. A server older than v1.120.0 refuses those commits, so `commit new` fails with `proto.Commit carries unknown fields`.
+
+An agent older than v1.120.0 can keep backing up to a newer server until a set's newest commit comes from v1.120.0 or later. It can't read that commit, so its `commit new`, `commit list` and `commit restore` on that set fail with the same error. Its other sets keep working. Upgrade the agents that share a set at the same time, along with anything else that lists or restores it.
+
+Rolling an agent back after it has written to a set locks the older version out of that set the same way, until it moves forward again. The backups themselves aren't affected.
+
+`goback --json --set home commit list` shows which version wrote each commit in its `version` field, such as `v1.120.0`. A build that records no release can show `(devel)` or a pseudo-version. Commits from older agents leave the field out.
+
+From v1.96.0 on, objects travel between agents and the server compressed, in the form the store keeps them, so agents and servers from before and after that release can't back up to each other.
 
 ## The admin key
 

@@ -25,6 +25,8 @@ Only `goback commit new` creates a store or index directory that doesn't exist. 
 
 [`goback fix`](/reference/cli/goback-fix/) rebuilds the index from the store at any time. See [Self-contained backups](/concepts/self-contained/).
 
+A `goback fix` older than v1.120.0 fails on a store holding a commit from v1.120.0 or later, with `proto.Commit carries unknown fields`. Upgrade every machine that opens the store directly. With a server, see [Upgrading](/self-host/server/#upgrading).
+
 ## Cache
 
 `--cache-dir` (or `GOBACK_CACHE_DIR`) sets a directory on this machine for all of goback's caches. Without it, goback caches nothing.

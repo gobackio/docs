@@ -25,6 +25,14 @@ On **Keys**, issue an agent key. It is shown only once.
 
 goback cloud needs goback v1.97.1 or later. Objects travel to it compressed, and older versions can't back up to it.
 
+:::caution[Temporary: install v1.119.0]
+For now, goback cloud accepts v1.97.1 through v1.119.x. A backup from v1.120.0 or later fails with `carries unknown fields`, so `@latest` doesn't work yet. Install this version until this note is gone:
+
+```sh
+go install github.com/gobackio/goback/cmd/goback@v1.119.0
+```
+:::
+
 ```sh
 export GOBACK_STORAGE=goback://<agent key>@store.goback.io
 export GOBACK_PASSPHRASE=<passphrase>

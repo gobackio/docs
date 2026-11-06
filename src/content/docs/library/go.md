@@ -70,6 +70,8 @@ job.AfterRun(ctx, env) // compact the store and trim the caches between runs
 
 `job.Path` runs a path backup, `job.PostgresBase` a Postgres base backup and `job.MySQLDump` a MySQL dump. `job.PostgresReceive` and `job.MySQLReceive` receive WAL or binlogs until their `stop` channel is closed, then make a last commit.
 
+From v1.120.0, each commit records the goback module version your program links, which `backup.Version()` returns. A server older than v1.120.0 refuses those commits, so [upgrade the server first](/self-host/server/#upgrading).
+
 ## Restore
 
 ```go
