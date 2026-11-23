@@ -27,6 +27,8 @@ Only `goback commit new` creates a store or index directory that doesn't exist. 
 
 Don't use v1.120.0. `goback fix` from any other version fails at a commit v1.120.0 wrote, with `proto.Commit carries unknown fields`. See [Upgrading](/self-host/server/#upgrading).
 
+v1.123.0 migrates the index the first time it opens it, and versions before v1.123.0 can't use it after that. See [Upgrading](/self-host/server/#upgrading).
+
 ## Cache
 
 `--cache-dir` (or `GOBACK_CACHE_DIR`) sets a directory on this machine for all of goback's caches. Without it, goback caches nothing.

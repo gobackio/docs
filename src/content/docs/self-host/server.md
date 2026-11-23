@@ -46,6 +46,8 @@ From v1.121.0, each commit records the goback version that wrote it, in its meta
 
 Don't use v1.120.0. Every other version refuses the commits it writes, with `proto.Commit carries unknown fields`, and `@latest` skips it. If a store holds commits from v1.120.0, back those sets up again to a new store and index with v1.121.0 or later. Keep the old store until the new one has what you need. To restore from it, use a v1.120.0 binary, the only version that reads those commits.
 
+v1.123.0 migrates the index the first time it opens it. The migration rebuilds the objects table so that each row names its archive by a number instead of its name, and on Postgres, lookups by ref move to a hash index. It rewrites every object row, so it takes longer the more objects the index holds, and the database needs room for a second copy of the table while it runs. Nothing can use the index until it finishes. Another process that opens the index meanwhile waits up to five minutes, then fails, so start one process on v1.123.0 first and the others once it runs. Versions before v1.123.0 can't use a migrated index, so upgrade every process that opens it together.
+
 ## The admin key
 
 The secret agents present backs up, reads and pins. It can also escrow the store key while the store keeps no copy of it, and change a set's retention to one that keeps at least as much. Everything else takes the admin key: deleting and undeleting commits and sets, unpinning, shortening retention, setting the trash window or the store policy, retiring, collecting, and escrowing another copy of the store key. So one machine's copy of the secret can't destroy another machine's backups.
