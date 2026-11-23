@@ -48,6 +48,8 @@ Don't use v1.120.0. Every other version refuses the commits it writes, with `pro
 
 v1.123.0 migrates the index the first time it opens it. The migration rebuilds the objects table so that each row names its archive by a number instead of its name, and on Postgres, lookups by ref move to a hash index. It rewrites every object row, so it takes longer the more objects the index holds, and the database needs room for a second copy of the table while it runs. Nothing can use the index until it finishes. Another process that opens the index meanwhile waits up to five minutes, then fails, so start one process on v1.123.0 first and the others once it runs. Upgrade every process that opens the index together. Don't run a version before v1.123.0 against a migrated index: it opens it without an error, then fails or misreads which archive holds an object.
 
+From v1.123.2, goback refuses to open an index that a newer version migrated. It fails with `migrating the index schema: the database was migrated by a newer build: it holds migration <version>`, where `<version>` is the timestamp of the first migration it doesn't know. Versions before v1.123.2 open such an index without an error.
+
 ## The admin key
 
 The secret agents present backs up, reads and pins. It can also escrow the store key while the store keeps no copy of it, and change a set's retention to one that keeps at least as much. Everything else takes the admin key: deleting and undeleting commits and sets, unpinning, shortening retention, setting the trash window or the store policy, retiring, collecting, and escrowing another copy of the store key. So one machine's copy of the secret can't destroy another machine's backups.

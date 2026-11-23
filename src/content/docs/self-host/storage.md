@@ -27,7 +27,7 @@ Only `goback commit new` creates a store or index directory that doesn't exist. 
 
 Don't use v1.120.0. `goback fix` from any other version fails at a commit v1.120.0 wrote, with `proto.Commit carries unknown fields`. See [Upgrading](/self-host/server/#upgrading).
 
-v1.123.0 migrates the index the first time it opens it. Don't run a version before v1.123.0 against it after that: it opens the index without an error, then fails or misreads it. See [Upgrading](/self-host/server/#upgrading).
+v1.123.0 migrates the index the first time it opens it. Don't run a version before v1.123.0 against it after that: it opens the index without an error, then fails or misreads it. From v1.123.2, goback refuses to open an index that a newer version migrated, with `the database was migrated by a newer build`. See [Upgrading](/self-host/server/#upgrading).
 
 ## Cache
 
