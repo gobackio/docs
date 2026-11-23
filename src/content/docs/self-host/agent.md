@@ -214,6 +214,8 @@ A dirty run stores a commit but leaves out files that were torn or unreadable. I
 - a backup's last three runs or more were dirty;
 - a receiver has not reported itself healthy for three times its `commit-every`.
 
+The agent can also export each job's runs as OpenTelemetry metrics. See [Telemetry](/self-host/telemetry/).
+
 ## Schedule reports
 
 The agent tells the store how often it plans a snapshot of each set: once the store is open, after every reload, and once a day. A backup on `every` expects one within its interval, and one on `cron` within the longest gap between two of its runs over the coming year, each plus its `jitter`. A WAL or binlog receiver reports its `commit-every`. A failed report is logged and sent again at the next reload or a day later.

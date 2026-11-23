@@ -29,6 +29,7 @@ export default defineConfig({
 						'self-host/reseal',
 						'self-host/agent',
 						'self-host/server',
+						'self-host/telemetry',
 						'self-host/postgres',
 						'self-host/mysql',
 					],

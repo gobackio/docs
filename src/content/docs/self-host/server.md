@@ -65,3 +65,5 @@ Without `--admin-key`, the server refuses these calls. Run them on the server's 
 An address that presents a wrong key ten times is then held to one try every six seconds, and its calls fail before any key is checked. Behind a proxy, with `--plaintext-behind-proxy`, the address is the last `X-Forwarded-For` entry.
 
 The server answers the gRPC health check, `grpc.health.v1.Health`. The service name `liveness` reports whether the process is up. Any other name reports readiness, which fails while the index doesn't answer and once the server starts shutting down.
+
+The server can export metrics and traces of its store, index and calls over OpenTelemetry. See [Telemetry](/self-host/telemetry/).
