@@ -46,8 +46,8 @@ To alert on a backup that stopped succeeding, compare `goback.schedule.last_succ
 | --- | --- | --- |
 | `goback.storage.bucket.requests` | `operation` | requests to the bucket, by `operation`: `get`, `head`, `put`, `list`, `delete` or `copy`; failed requests count too |
 | `goback.storage.bucket.bytes` | `operation` | bytes those requests carried |
-| `goback.storage.pack.has.asked` | | refs the store was asked whether it holds |
-| `goback.storage.pack.has.held` | | refs among those that the store holds |
+| `goback.storage.pack.has.asked` | `caller` | refs the store was asked whether it holds, by `caller`: `missing` for a client asking which refs the store lacks, `assumed` for an upload checking the refs its client assumed the store holds, `references` for an upload checking what its object references, `other` for the rest |
+| `goback.storage.pack.has.held` | `caller` | refs among those that the store holds |
 | `goback.storage.pack.get_object_size`, `goback.storage.pack.put_object_size` | `object_type` | size of each object read or stored, in bytes |
 | `goback.storage.pack.archive_read_size`, `goback.storage.pack.archive_write_size` | `object_type` | size of each archive read or write, in bytes |
 | `goback.storage.pack.archive_read_latency`, `goback.storage.pack.archive_write_latency` | `object_type` | how long each archive read or write took, in milliseconds |
@@ -58,7 +58,7 @@ To alert on a backup that stopped succeeding, compare `goback.schedule.last_succ
 | `goback.storage.pack.rewrite.copied_bytes` | | bytes a sweep or compaction copied into new archives |
 | `goback.storage.pack.rewrite.archive_duration` | | how long rewriting each archive took, in seconds |
 
-`has.held` divided by `has.asked` is the share of lookups that found the object already stored. The `has` counters exist from v1.123.0. See [Garbage collection](/internals/garbage-collection/) for the phases of a collection.
+`has.held` divided by `has.asked` is the share of lookups that found the object already stored. The `has` counters exist from v1.123.0, and carry `caller` from v1.123.4. See [Garbage collection](/internals/garbage-collection/) for the phases of a collection.
 
 ## Index
 
