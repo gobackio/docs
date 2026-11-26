@@ -50,6 +50,8 @@ v1.123.0 migrates the index the first time it opens it. The migration rebuilds t
 
 From v1.123.2, goback refuses to open an index that a newer version migrated. It fails with `migrating the index schema: the database was migrated by a newer build: it holds migration <version>`, where `<version>` is the timestamp of the first migration it doesn't know. Versions before v1.123.2 open such an index without an error.
 
+From v1.124.0, a store's policy can name its own [chunk size](/internals/data-model/#chunk-size). A server whose store names one refuses commits from agents before v1.124.0. They fail with `commit refused: the store cuts chunks of <bytes> bytes, which this agent cannot; upgrade it`. On a store that names none, older agents back up as before.
+
 ## The admin key
 
 The secret agents present backs up, reads and pins. It can also escrow the store key while the store keeps no copy of it, and change a set's retention to one that keeps at least as much. Everything else takes the admin key: deleting and undeleting commits and sets, unpinning, shortening retention, setting the trash window or the store policy, retiring, collecting, and escrowing another copy of the store key. So one machine's copy of the secret can't destroy another machine's backups.

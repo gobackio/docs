@@ -115,7 +115,7 @@ The console decrypts names in the browser with a WebAssembly module.
 | chunk id without a store key | SHA-256 of the chunk |
 | scope with a store key | everything written under that key |
 | scope without a store key | the whole store; in goback cloud, every keyless org on the same store |
-| chunker | FastCDC, 16/64/256 KiB, not keyed |
+| chunker | FastCDC, not keyed: chunks of about 64 KiB, from 16 KiB to 256 KiB. From v1.124.0, a store's policy can name a target up to 1 MiB, and chunks are cut from a quarter of it to four times it. See [Chunk size](/internals/data-model/#chunk-size) |
 
 This means that:
 
